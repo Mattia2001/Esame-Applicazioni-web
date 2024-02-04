@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block home_active %}active{% endblock %}
+{% block page_name%}Home{%endblock%}
+
+<!--Nella home si devono visualizzare tutte le raccolte fondi attualmente attive, mostrando prima quelle che sono
+prossime alla scadenza -->
+
+{% block content %}
+
+<!--errori di login devono essere visualizzati sotto la navbar-->
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<aside id="myaside" class="col-lg-3 col-md-12">
+    {% if not current_user.is_authenticated %}
+    <section>
+      <h3>Login</h3>
+      <div class="bg-light p-4 border rounded mb-3">
+        <form action="/login" method="POST">
+          <div class="mb-3">
+            <label for="nicknameInput" class="form-label">email</label>
+            <input type="text" class="form-control" id="emailInput" aria-describedby="nicknameHelp" name="email">
+            <div id="emailHelp" class="form-text">Non condivideremo mai la tua email con nessun altro.</div>
+          </div>
+          <div class="mb-3">
+            <label for="passwordInput" class="form-label">Password</label>
+            <input type="password" class="form-control" id="passwordInput" name="password">
+          </div>
+          <small>Non hai ancora un account? <a href="/iscriviti">Registrati</a></small>
+          <button type="submit" class="btn btn-primary mt-3">Accedi</button>
+        </form>
+      </div>
+    </section>
+    {% endif %}
+  </aside>
+{% endblock %}

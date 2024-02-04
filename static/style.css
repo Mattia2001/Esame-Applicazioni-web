@@ -1,0 +1,9 @@
+.mynavbar {
+    background-color: #007bff; /* Bootstrap primary blue */
+  }
+  .navbar-dark .navbar-nav .nav-link {
+    color: white;
+  }
+  .navbar-dark .navbar-nav .nav-link:hover {
+    background-color: #0056b3; /* A darker shade of blue for hover */
+  }
