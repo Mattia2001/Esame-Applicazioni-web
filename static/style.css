@@ -7,3 +7,18 @@
   .navbar-dark .navbar-nav .nav-link:hover {
     background-color: #0056b3; /* A darker shade of blue for hover */
   }
+
+  .mybutton {
+    background-color: #0056b3;
+    border: none;
+    border-radius: 50%;
+    bottom: 30px;
+    color: white;
+    height: 60px;
+    position: fixed;
+    right: 30px;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    width: 60px;
+}

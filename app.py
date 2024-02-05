@@ -1,12 +1,12 @@
 # import module
 from flask import Flask, render_template, request, redirect, url_for, flash
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
 import utenti_dao
-#import raccolte_dao
+import raccolte_dao
 #import donazioni_dao
 
 from models import User
@@ -29,12 +29,20 @@ login_manager.init_app(app)
 @app.route('/')
 def home():
     
-    # interroga il database, richiedi tutte le raccolte attive con le rispettive informazioni,
-    # ordinale mostrando prima quelle più vicine alla scadenza
+    '''Interroga il database, richiedi tutte le raccolte attive con le rispettive informazioni,
+       ordinale mostrando prima quelle più vicine alla scadenza.
+       Quando si raggiunge questa pagina deve avvenire un controllo su tutte le raccolte in corso
+       per verificare che siano ancora valide'''
 
+    now = datetime.now()  # Get the current date and time
+    current_date = now.date()  # Get the current date
+    current_hour = now.hour  # Get the current hour
+    current_minute = now.minute  # Get the current minute
 
-    #return render_template('home.html', posts=posts_db)
-    return render_template('home.html')
+    # display all the posts
+    raccolte_db = raccolte_dao.get_raccolte()
+
+    return render_template('home.html', raccolte=raccolte_db)
 
 # restituisci solo la pagina per iscriversi
 @app.route('/iscriviti')
@@ -143,6 +151,117 @@ def logout():
     logout_user()
     return redirect(url_for('home'))
 
+# define the new post endpoint
+@app.route('/raccolte/new', methods=['POST'])
+@login_required
+def nuova_raccolta():
+
+    '''I campi presenti nel form sono:
+        - titolo_raccolta
+        - descrizione
+        - immagine_raccolta
+        - cifra_da_raggiungere
+        - importo minimo
+        - tipo_raccolta
+        
+    Quindi si devono aggiungere anche:
+        - cifra_attuale = 0 perchè la raccolta è stata appena creata
+        - organizzatore_raccolta = current_user
+        - data creazione da definire al momento della sottomissione del form
+        - data_termine da definire in base a tipo_raccolta'''
+            
+    raccolta = request.form.to_dict()
+
+    if raccolta['titolo_raccolta'] == '':
+        flash('Il titolo non può essere vuoto', 'danger')
+        app.logger.error('Il titolo non può essere vuoto')
+        return redirect(url_for('home'))
+
+    # controlla che la descrizione non sia vuota
+    if raccolta['descrizione'] == '':
+        app.logger.error('La descrizione non può essere vuota!')
+        return redirect(url_for('home'))
+    
+    # controlla che la cifra da raggiungere non sia vuota
+    if raccolta['cifra_da_raggiungere'] == '':
+        app.logger.error('La cifra da raggiungere non può essere vuota!')
+        return redirect(url_for('home'))
+    
+    # controlla che l'importo minimo non sia vuoto
+    if raccolta['importo_minimo'] == '':
+        app.logger.error('L\' importo minimo non può essere vuoto!')
+        return redirect(url_for('home'))
+    
+    # il tipo di raccolta: lampo o normale
+    
+    tipo_raccolta = raccolta.get('tipo_raccolta', 'off')  # 'off' as default if not present
+    if tipo_raccolta == 'on':
+        raccolta['tipo_raccolta'] = 'lampo'
+    else:
+        raccolta['tipo_raccolta'] = 'normale'
+
+    # Get the current date and time
+    now = datetime.now()
+
+    # Extract the date, hour, minute
+    current_date, current_hour, current_minute = now.date(), now.hour, now.minute
+
+    # data di creazione della raccolta
+    raccolta['data_creazione'] = now.strftime("%Y-%m-%d %H:%M")
+
+    # data del termine della raccolta, dipende da tipo_raccolta
+    if raccolta['tipo_raccolta'] == 'lampo':
+        raccolta['data_termine'] = now + timedelta(minutes=5)
+    else:
+        raccolta['data_termine'] =  now + timedelta(days=14)
+
+    # alla sua creazione, la cifra raggiunta della raccolta è zero
+    raccolta['cifra_attuale'] = 0
+
+    raccolta['organizzatore_raccolta'] = current_user.id_utente
+    
+    # verifica se è stata ricevuta un'immagine, in caso affermativo
+    # ridimensionala e poi salvala con un nome che includa quello del creatore della raccolta
+    # ovvero il current user
+    immagine_raccolta = request.files['immagine_raccolta']
+    if immagine_raccolta:
+
+        # Open the user-provided image using the Image module
+        img = Image.open(immagine_raccolta)
+
+        # Get the width and height of the image
+        width, height = img.size
+
+        # Calculate the new height while maintaining the aspect ratio based on the desired width
+        new_height = height/width * POST_IMG_WIDTH
+
+        # Define the size for thumbnail creation with the desired width and calculated height
+        size = POST_IMG_WIDTH, new_height
+        img.thumbnail(size, Image.Resampling.LANCZOS)
+
+        # Extracting file extension from the image filename
+        ext = immagine_raccolta.filename.split('.')[-1]
+        # Getting the current timestamp in seconds
+        secondi = int(datetime.now().timestamp())       
+
+        # Saving the image with a unique filename in the 'static' directory
+        img.save('static/@' + current_user.nome.lower() + current_user.cognome.lower() + '-' + str(secondi) + '.' + ext)
+
+        # Updating the 'immagine_post' field in the post dictionary with the image filename
+        raccolta['immagine_raccolta'] = '@' + current_user.nome.lower() + current_user.cognome.lower() + str(secondi) + '.' + ext
+
+    # add the new post to the posts database
+    success = raccolte_dao.add_raccolta(raccolta)
+
+    if success:
+        flash('Raccolta fondi creata correttamente', 'success')
+        app.logger.info('Raccolta fondi creata correttamente')
+    else:
+        flash('Errore nella creazione della raccolta fondi: riprova!', 'danger')
+        app.logger.error('Errore nella creazione della raccolta fondi: riprova!')
+
+    return redirect(url_for('home'))
+
 # pagina con le raccolte terminate
 @app.route('/raccolte_terminate')
 def raccolte_terminate():
@@ -161,8 +280,8 @@ def le_mie_raccolte():
 
 @app.route('/about')
 def about():
-
-    return render_template('about.html')
+    author_picture = 'mattia_antonini.jpg'
+    return render_template('about.html', picture = author_picture)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=3000, debug=True)

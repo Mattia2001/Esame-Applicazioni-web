@@ -42,4 +42,88 @@ prossime alla scadenza -->
     </section>
     {% endif %}
   </aside>
+
+  <!--Nel main l'utente deve visualizzare tutte le raccolte fondi momentaneamente attive, partendo da quelle più
+  vicine alla scadenza. Ad ogni raccolta è associata una card orizzontale con le informazioni riguardanti la raccolta
+  tranne il pulsante per donare che può essere visto solo nella pagina della singola raccolta dagli utenti loggati-->
+
+  <main class="col-lg-9 col-md-12">
+    {% for raccolta in raccolte %}
+    <div class="card mb-3" style="max-width: 540px;">
+      <div class="row g-0">
+        {% if raccolta.immagine %}
+        <div class="col-md-4">
+          <img src="{{ url_for('static', filename=raccolta.immagine) }}" class="img-fluid rounded-start" 
+          alt="Questa è l'immagine della raccolta {{raccolta.nome_raccolta | e}}"
+          href="{{url_for('singola_raccolta')}}">
+        </div>
+        {% endif %}
+        <div class="col-md-8">
+          <div class="card-body">
+            <h5 class="card-title">{{raccolta.nome_raccolta | e}}
+              - {% if raccolta.tipo_raccolta == 'lampo' %} Lampo
+              {%else%} Normale
+              {%endif%}
+            </h5>
+            <p class="card-text">{{raccolta.descrizione}}</p>
+            <p class="card-text"><small class="text-body-secondary">Raccolta creata il: {{raccolta.data_creazione}}</small></p>
+            <p class="card-text"><small class="text-body-secondary">Finisce il: {{raccolta.data_termine}}</small></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </main>
+
+  <!--Pulsante per aggiungere una nuova raccolta fondi-->
+  {% if current_user.is_authenticated %}
+<button type="button" class="mybutton" data-bs-toggle="modal" data-bs-target="#createModal">
+  +
+</button>
+<div class="modal fade" id="createModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5">Crea una nuova raccolta fondi</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/raccolte/new" method="POST" enctype="multipart/form-data">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="titoloInput" class="form-label">Titolo</label>
+            <input type="text" class="form-control" id="titoloInput" name="titolo_raccolta" required>
+          </div>
+          <div class="mb-3">
+            <label for="descrizioneTextArea" class="form-label">Descrizione</label>
+            <textarea class="form-control" id="descrizioneTextArea" name="descrizione" rows="3"
+              placeholder="Inserisci una descrizione per la tua raccolta fondi" required minlength="30"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="imageFile" class="form-label">Aggiungi un'immagine, se vuoi</label>
+            <input class="form-control" name="immagine_raccolta" type="file" id="imageFile">
+          </div>
+          <div class="input-group mb-3">
+            <label for="cifra_da_raggiungereInput" class="form-label mb-2">Cifra da raggiungere</label>
+            <span class="input-group-text">€</span>
+            <input type="text" class="form-control" id="cifra_da_raggiungereInput" name="cifra_da_raggiungere" aria-label="Cifra da raggiungere" required>
+          </div>
+          <div class="input-group mb-3">
+            <label for="importo_minimoInput" class="form-label mb-2">Importo minimo</label>
+            <span class="input-group-text">€</span>
+            <input type="text" class="form-control" id="importo_minimoInput" name="importo_minimo" aria-label="Importo minimo" required>
+          </div>
+          <div class="mb-3 form-check">
+            <label class="form-check-label" for="tipo_raccolta_checkbox">Lampo</label>
+            <input type="checkbox" class="form-check-input" id="tipo_raccolta_checkbox" name="tipo_raccolta">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+          <button type="submit" class="btn btn-primary">Crea raccolta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
 {% endblock %}
