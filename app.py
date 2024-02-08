@@ -5,9 +5,7 @@ from datetime import date, datetime, timedelta
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
-import utenti_dao
-import raccolte_dao
-#import donazioni_dao
+import utenti_dao, raccolte_dao, donazioni_dao
 
 from models import User
 
@@ -38,11 +36,12 @@ def home():
     current_date = now.date()  # Get the current date
     current_hour = now.hour  # Get the current hour
     current_minute = now.minute  # Get the current minute
+    data_oggi = now.strftime("%Y-%m-%d %H:%M")
 
     # display all the posts
     raccolte_db = raccolte_dao.get_raccolte()
 
-    return render_template('home.html', raccolte=raccolte_db)
+    return render_template('home.html', raccolte=raccolte_db, oggi=data_oggi)
 
 # restituisci solo la pagina per iscriversi
 @app.route('/iscriviti')
@@ -205,15 +204,15 @@ def nuova_raccolta():
 
     # Extract the date, hour, minute
     current_date, current_hour, current_minute = now.date(), now.hour, now.minute
-
+    
     # data di creazione della raccolta
     raccolta['data_creazione'] = now.strftime("%Y-%m-%d %H:%M")
 
-    # data del termine della raccolta, dipende da tipo_raccolta
+    # data del termine della raccolta, dipende da tipo_raccolta (senza secondi)
     if raccolta['tipo_raccolta'] == 'lampo':
-        raccolta['data_termine'] = now + timedelta(minutes=5)
+        raccolta['data_termine'] = (now + timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M")
     else:
-        raccolta['data_termine'] =  now + timedelta(days=14)
+        raccolta['data_termine'] =  (now + timedelta(days=14)).strftime("%Y-%m-%d %H:%M")
 
     # alla sua creazione, la cifra raggiunta della raccolta è zero
     raccolta['cifra_attuale'] = 0
@@ -262,21 +261,73 @@ def nuova_raccolta():
 
     return redirect(url_for('home'))
 
+# indirizza alla pagina della singola raccolta
+@app.route('/raccolte/<int:id>')
+def singola_raccolta(id):
+
+    # estrai i dati della raccolta selezionata
+    raccolta_db = raccolte_dao.get_raccolta_by_id(id)
+
+    # estrai le donazioni effettuate alla raccolta selezionata per mostrarle nella pagina singola raccolta
+    donazioni_db = donazioni_dao.get_donazione_by_id(id)
+
+    return render_template('singola_raccolta.html', raccolta = raccolta_db, donazioni=donazioni_db)
+
+# effettua una donazione
+@app.route('/donazioni/new', methods=['POST'])
+@login_required
+def new_donazione():
+    
+    # aggiungi la donazione ricevuta tramite form alla tabella delle donazioni
+    # il form ricevuto non contiene la data che si assume essere sempre quella odierna, quindi la si deve aggiungere
+
+    donazione = request.form.to_dict()
+
+    # controlla se l'utente è anonimo
+    tipo_donatore = donazione.get('utente_anonimo', 'off')  # 'off' as default if not present
+    if tipo_donatore == 'on':
+        donazione['donatore'] = None
+    else:
+        donazione['donatore'] = current_user.id_utente
+
+    # id della raccolta
+    donazione['id_raccolta'] = int(donazione['id_raccolta'])
+    
+    # aggiungi la data di oggi
+    # Get the current date and time
+    now = datetime.now()
+    donazione['data_donazione'] = now.strftime("%Y-%m-%d %H:%M")
+
+    success = donazioni_dao.add_donazione(donazione)
+
+    if success:
+        app.logger.info('Donazione effettuata correttamente')
+    else:
+        app.logger.error('Errore nella creazione della donazione: riprova!')
+            
+    return redirect(url_for('singola_raccolta', id=donazione['id_raccolta']))
+
 # pagina con le raccolte terminate
 @app.route('/raccolte_terminate')
 def raccolte_terminate():
     
-    # interroga il database e richiedi tutte le raccolte con lo status "terminata", ordina in ordine
-    # decrescente di data, quindi mostrando prima quelle finite più di recente
+    '''Estrai dal database tutte le raccolte con data di oggi successiva alla data del termine
+    nell'HTML della pagina, se cifra_attuale >= cifra_raccolta, rappresentare graficamente in qualche modo
+    che la raccolta è andata a buon fine'''
   
-    return render_template('raccolte_terminate.html')
+    #raccolte_terminate_db = raccolte_dao.get_raccolte_terminate()
+    raccolte_terminate_db = raccolte_dao.get_raccolte()
+
+    now = datetime.now()  # Get the current date and time
+    data_oggi = now.strftime("%Y-%m-%d %H:%M")
+    
+    return render_template('raccolte_terminate.html', raccolte_terminate=raccolte_terminate_db, data_oggi=data_oggi)
 
 # pagina con tutte le raccolte dell'utente
 @app.route('/le_mie_raccolte')
 def le_mie_raccolte():
 
     return render_template('le_mie_raccolte.html')
-
 
 @app.route('/about')
 def about():

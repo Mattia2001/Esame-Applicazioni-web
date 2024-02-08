@@ -69,3 +69,29 @@ def add_user(user):
     conn.close()
 
     return success
+
+# se una raccolta è andata a buon fine, modifica il portafoglio dell'utente che ha iniziato la raccolta
+def modifica_portafoglio(raccolta, utente):
+     
+    conn = sqlite3.connect('db/raccolte_fondi.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    success = False
+
+    # Aggiorna il portafoglio dell'utente che ha completato la raccolta
+    # Se la raccolta ha avuto successo allora cifra_attuale >= cifra_da_raggiungere
+    sql_update_portafoglio = 'UPDATE utenti SET portafoglio = portafoglio + ? WHERE id_utente = ?'
+    cursor.execute(sql_update_portafoglio, (raccolta['cifra_attuale'], raccolta['organizzatore_raccolta']))
+
+    try:
+        conn.commit()
+        success = True
+    except Exception as e:
+        print('ERROR', str(e))
+        # if something goes wrong: rollback
+        conn.rollback()
+
+    cursor.close()
+    conn.close()
+
+    return success

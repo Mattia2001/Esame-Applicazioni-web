@@ -49,29 +49,43 @@ prossime alla scadenza -->
 
   <main class="col-lg-9 col-md-12">
     {% for raccolta in raccolte %}
+    <!--bisogna visualizzare solo le raccolte ancora valide-->
+    {% if oggi <= raccolta.data_termine %}
+
     <div class="card mb-3" style="max-width: 540px;">
       <div class="row g-0">
-        {% if raccolta.immagine %}
         <div class="col-md-4">
-          <img src="{{ url_for('static', filename=raccolta.immagine) }}" class="img-fluid rounded-start" 
-          alt="Questa è l'immagine della raccolta {{raccolta.nome_raccolta | e}}"
-          href="{{url_for('singola_raccolta')}}">
-        </div>
+          {% if raccolta.immagine %}
+          <a href="{{ url_for('singola_raccolta', id=raccolta.id_raccolta) }}">
+            <img class="w-100 p-2" src="{{ url_for('static', filename=raccolta.immagine) }}" 
+            alt="Questa è l'immagine della raccolta {{raccolta.nome_raccolta | e}}">
+          </a>
         {% endif %}
-        <div class="col-md-8">
+      </div>
+        <div class="col-12">
           <div class="card-body">
-            <h5 class="card-title">{{raccolta.nome_raccolta | e}}
+            <h5 class="card-title"> 
+                 <a href="{{url_for('singola_raccolta', id=raccolta.id_raccolta)}}">{{raccolta.nome_raccolta | e}}</a>  
               - {% if raccolta.tipo_raccolta == 'lampo' %} Lampo
               {%else%} Normale
               {%endif%}
             </h5>
             <p class="card-text">{{raccolta.descrizione}}</p>
+            <p class="card-text">Totale raccolto: {{raccolta.cifra_attuale}}€ / {{raccolta.cifra_da_raggiungere}} €</p>
+            <!--Se la raccolta è di tipo lampo, mostra solo ora e minuto, non tutta la data.
+            Quindi usiamo il filtro Jinja split()-->
+            {% if raccolta.tipo_raccolta == 'lampo' %}
+            <p class="card-text"><small class="text-body-secondary">Raccolta creata alle ore: {{raccolta.data_creazione.split(' ')[1]}}</small></p>
+            <p class="card-text"><small class="text-body-secondary">Termina alle ore: {{raccolta.data_termine.split(' ')[1]}}</small></p>
+            {% else %}
             <p class="card-text"><small class="text-body-secondary">Raccolta creata il: {{raccolta.data_creazione}}</small></p>
-            <p class="card-text"><small class="text-body-secondary">Finisce il: {{raccolta.data_termine}}</small></p>
+            <p class="card-text"><small class="text-body-secondary">Termina il: {{raccolta.data_termine}}</small></p>
+            {% endif %}
           </div>
         </div>
       </div>
     </div>
+    {% endif %}
     {% endfor %}
   </main>
 

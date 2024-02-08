@@ -22,3 +22,16 @@
     vertical-align: middle;
     width: 60px;
 }
+
+.progress-bar {
+  background-color: #007bff;
+  height: 20px;
+  border-radius: 2px;
+  color: white;
+  text-align: center;
+  transition: width 0.6s ease;
+  overflow: hidden; /* Aggiunto overflow per evitare testo che fuoriesce dalla barra */
+}
+
+.raccolte_terminate_successo{color:green}
+.raccolte_terminate_fallita{color:red}
