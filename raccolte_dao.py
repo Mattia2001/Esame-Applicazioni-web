@@ -33,9 +33,10 @@ def get_raccolte_terminate():
     # specify that returned data have to stored into a dictionary
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
+    status_terminata = 'terminata'
 
-    sql = 'SELECT * FROM raccolte WHERE raccolte.status = ? ORDER BY data_creazione DESC'
-    cursor.execute(sql, ('terminata',))
+    sql = 'SELECT * FROM raccolte WHERE status = ? ORDER BY data_creazione DESC'
+    cursor.execute(sql, (status_terminata,))
     raccolte_terminate = cursor.fetchall()
 
     cursor.close()
@@ -61,6 +62,23 @@ def get_raccolta_by_id(id):
     conn.close()
 
     return post
+
+# necessaria per la pagina raccolte utente, dove id_utente è uguale all'id del current user
+def get_raccolta_by_id_utente(id_utente):
+
+    conn = sqlite3.connect('db/raccolte_fondi.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    sql = 'SELECT * FROM raccolte WHERE raccolte.organizzatore_raccolta = ?'
+    cursor.execute(sql, (id_utente,))
+    #retrieve one record at a time from the result set.
+    raccolte_utente = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return raccolte_utente
     
 
 
@@ -76,7 +94,7 @@ def add_raccolta(raccolta):
     data_oggi = now.strftime("%Y-%m-%d %H:%M")
 
     # Imposta lo status in base alla data di termine
-    raccolta['status'] = 'attiva' if raccolta['data_termine'] > data_oggi else 'terminata'
+    #raccolta['status'] = 'attiva' if raccolta['data_termine'] > data_oggi else 'terminata'
 
     if 'immagine_raccolta' in raccolta:
         sql = 'INSERT INTO raccolte(nome_raccolta,descrizione,immagine,data_creazione,data_termine,cifra_attuale,cifra_da_raggiungere,tipo_raccolta,organizzatore_raccolta,importo_minimo,status) VALUES(?,?,?,?,?,?,?,?,?,?,?)'
@@ -131,7 +149,7 @@ def update_status_e_portafoglio():
     data_oggi = now.strftime("%Y-%m-%d %H:%M")
 
     # Aggiorna lo status delle raccolte
-    sql_update_status = 'UPDATE raccolte SET status = "terminata" WHERE strftime("%Y-%m-%d %H:%M", data_termine) > ? AND status = "attiva" '
+    sql_update_status = 'UPDATE raccolte SET status = "terminata" WHERE strftime("%Y-%m-%d %H:%M", data_termine) <= ? AND status = "attiva"'
     cursor.execute(sql_update_status, (data_oggi, ))
 
     try:
@@ -142,9 +160,9 @@ def update_status_e_portafoglio():
         conn.rollback()
 
     # Lo status è stato aggiornato, se la cifra attuale è superiore alla cifra da raggiungere, aggiorna il portafoglio
-    sql_update_portafoglio = 'UPDATE utenti SET portafoglio = portafoglio + raccolte.cifra_attuale ' \
-                             'FROM utenti INNER JOIN raccolte ON utenti.id_utente = raccolte.organizzatore_raccolta ' \
-                             'WHERE raccolte.cifra_attuale >= raccolte.cifra_da_raggiungere'
+    sql_update_portafoglio = 'UPDATE utenti ' \
+                         'SET portafoglio = COALESCE(portafoglio, 0) + (SELECT COALESCE(SUM(cifra_attuale), 0) FROM raccolte WHERE utenti.id_utente = raccolte.organizzatore_raccolta AND raccolte.cifra_attuale >= raccolte.cifra_da_raggiungere AND raccolte.status = "terminata")'
+
     cursor.execute(sql_update_portafoglio)
 
     try:

@@ -8,5 +8,59 @@ aggiungerle o rimuoverle. Viene visualizzato anche il totale raccolta dalle prop
 che è consultabile nella colonna "portafoglio" nella tabella utente -->
 <!--Vengono visualizzate anche tutte le donazioni effettuate-->
 
-{%block content%}
+{% block content %}
+
+{% if current_user.is_authenticated %}
+<h2>Il mio portafoglio: {{ current_user.portafoglio }}</h2>
+
+<main class="col-lg-9 col-md-12">
+    <div class="container">
+        <div class="row">
+            <div class="col-3">
+                <!-- 3 colonne lasciate vuote a sinistra, si potrebbe aggiungere una sidebar con
+                i dati dell'utente che ha eseguito l'accesso-->
+            </div>
+            <div class="col-9">
+                <h2>Raccolte in corso:</h2>
+                {% for raccolta in raccolte %}
+                    {% if raccolta.status == "attiva" %}
+                        <div class="card mb-3" style="max-width: 540px;">
+                            <div class="row g-0">
+                                {% if raccolta.immagine %}
+                                    <div class="col-md-4">
+                                        <img src="{{ url_for('static', filename=raccolta.immagine) }}" class="img-fluid rounded-start" alt="Questa è l'immagine della raccolta {{ raccolta.nome_raccolta | e }}">
+                                    </div>
+                                {% endif %}
+                                <div class="col-md-8">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            {{ raccolta.nome_raccolta | e }}
+                                            - {% if raccolta.tipo_raccolta == 'lampo' %} Lampo
+                                            {% else %} Normale
+                                            {% endif %}
+                                        </h5>
+                                        <p class="card-text">{{ raccolta.descrizione }}</p>
+                                        <p class="card-text">Totale raccolto: {{ raccolta.cifra_attuale }}€ / {{ raccolta.cifra_da_raggiungere }} €</p>
+                                        {% if raccolta.tipo_raccolta == 'lampo' %}
+                                            <p class="card-text"><small class="text-muted">Raccolta creata alle ore: {{ raccolta.data_creazione.split(' ')[1] }}</small></p>
+                                            <p class="card-text"><small class="text-muted">Termina alle ore: {{ raccolta.data_termine.split(' ')[1] }}</small></p>
+                                        {% else %}
+                                            <p class="card-text"><small class="text-muted">Raccolta creata il: {{ raccolta.data_creazione }}</small></p>
+                                            <p class="card-text"><small class="text-muted">Termina il: {{ raccolta.data_termine }}</small></p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</main>
+
+{% else %}
+<h1>Devi essere autenticato per visualizzare le tue raccolte fondi.</h1>
+{% endif %}
+
 {% endblock %}

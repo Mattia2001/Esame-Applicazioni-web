@@ -10,7 +10,8 @@ import utenti_dao, raccolte_dao, donazioni_dao
 from models import User
 
 from PIL import Image
-#import PIL.Image
+
+import logging
 
 PROFILE_IMG_HEIGHT = 130
 POST_IMG_WIDTH = 300
@@ -34,7 +35,7 @@ login_manager.init_app(app)
    portafoglio = portafoglio + cifra_raccolta WHERE id_utente = organizzatore_raccolta'''
 
 @app.before_request
-def update_raccolte_and_portafoglio():
+def update_before_request():
     app.logger.info('Inizio update_status_e_portafoglio')
     # Esegui la funzione di controllo prima di ogni richiesta
     try:
@@ -150,7 +151,7 @@ def login():
     flash('Credenziali non valide, riprova', 'danger')
     return redirect(url_for('home'))
   else:
-    new = User(id_utente=utente_db['id_utente'], nome=utente_db['nome'], cognome=utente_db['cognome'], email=utente_db['email'], password=utente_db['password'], immagine_utente=utente_db['immagine_utente'] )
+    new = User(id_utente=utente_db['id_utente'], nome=utente_db['nome'], cognome=utente_db['cognome'], email=utente_db['email'], password=utente_db['password'], immagine_utente=utente_db['immagine_utente'], portafoglio=utente_db['portafoglio'] )
     login_user(new, True)
     flash('Bentornato ' + utente_db['nome'] + ' ' + utente_db['cognome'] + '!', 'success')
 
@@ -162,7 +163,7 @@ def load_user(user_id):
 
     db_user = utenti_dao.get_user_by_id(user_id)
     if db_user is not None:
-        user = User(id_utente=db_user['id_utente'], nome=db_user['nome'], cognome=db_user['cognome'], email=db_user['email'], password=db_user['password'], immagine_utente=db_user['immagine_utente'])
+        user = User(id_utente=db_user['id_utente'], nome=db_user['nome'], cognome=db_user['cognome'], email=db_user['email'], password=db_user['password'], immagine_utente=db_user['immagine_utente'], portafoglio=db_user['portafoglio'])
     else:
         user = None
 
@@ -224,6 +225,10 @@ def nuova_raccolta():
     else:
         raccolta['tipo_raccolta'] = 'normale'
 
+    # esegui un print dei dati ricevuti dal form
+    print("")
+    print(raccolta)
+
     # Get the current date and time
     now = datetime.now()
 
@@ -233,13 +238,18 @@ def nuova_raccolta():
     # data di creazione della raccolta
     raccolta['data_creazione'] = now.strftime("%Y-%m-%d %H:%M")
 
+    # al momento della sua creazione la raccolta è sempre attiva
+    raccolta['status'] = 'attiva'
+    
     # data del termine della raccolta, dipende da tipo_raccolta (senza secondi)
     if raccolta['tipo_raccolta'] == 'lampo':
         #raccolta['data_termine'] = (now + timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M")
         # per fare delle prove metto delta=1 minuto
         raccolta['data_termine'] = (now + timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M")
+        print("La raccolta è di tipo lampo")
     else:
         raccolta['data_termine'] =  (now + timedelta(days=14)).strftime("%Y-%m-%d %H:%M")
+        print("La raccolta è di tipo normale")
 
     # alla sua creazione, la cifra raggiunta della raccolta è zero
     raccolta['cifra_attuale'] = 0
@@ -247,9 +257,6 @@ def nuova_raccolta():
     # l'utente che crea la raccolta è necessariamente il current user
     raccolta['organizzatore_raccolta'] = current_user.id_utente
 
-    # al momento della sua creazione la raccolta è sempre attiva
-    raccolta['status'] = 'attiva'
-    
     # verifica se è stata ricevuta un'immagine, in caso affermativo
     # ridimensionala e poi salvala con un nome che includa quello del creatore della raccolta
     # ovvero il current user
@@ -279,6 +286,11 @@ def nuova_raccolta():
 
         # Updating the 'immagine_post' field in the post dictionary with the image filename
         raccolta['immagine_raccolta'] = '@' + current_user.nome.lower() + current_user.cognome.lower() + str(secondi) + '.' + ext
+
+    # la raccolta è pronta per essere aggiunta alla tabella raccolte
+    # esegui un print dei dati ricevuti dal form
+    print("")
+    print(f"Aggiungo al database:{raccolta}")
 
     # add the new post to the posts database
     success = raccolte_dao.add_raccolta(raccolta)
@@ -353,9 +365,14 @@ def raccolte_terminate():
 
 # pagina con tutte le raccolte dell'utente
 @app.route('/le_mie_raccolte')
+@login_required
 def le_mie_raccolte():
 
-    return render_template('le_mie_raccolte.html')
+    id_utente = current_user.id_utente
+    # bisogna estrarre dal database tutte le raccolte del current user sfruttando il suo id
+    raccolte_utente_db = raccolte_dao.get_raccolta_by_id_utente(id_utente)
+
+    return render_template('le_mie_raccolte.html', raccolte_utente = raccolte_utente_db)
 
 @app.route('/about')
 def about():

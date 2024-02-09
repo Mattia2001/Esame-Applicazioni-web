@@ -24,9 +24,9 @@
             
             
             <h3>Donazioni:</h3>
-            {% if current_user.is_authenticated %}
+            {% if current_user.is_authenticated and raccolta.status == "attiva" %}
 
-            <!--Pulsante per effettuare una donazione-->
+            <!--Pulsante per effettuare una donazione, dedve comparire solo per le raccolte attive-->
 
             <button type="button" class="mybutton" data-bs-toggle="modal" data-bs-target="#createModal">
                 +
