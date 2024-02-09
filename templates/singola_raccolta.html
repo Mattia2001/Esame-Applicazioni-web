@@ -21,9 +21,7 @@
             <p>Descrizione: {{raccolta.descrizione | e}}</p>
             <p>Raccolte iniziata il: {{raccolta.data_creazione | e}} - Termina il: {{raccolta.data_termine | e}}</p>
             <p>Totale raccolto: {{raccolta.cifra_attuale | e}} € / {{raccolta.cifra_da_raggiungere | e}} €</p>
-            <div class="progress-bar" style="width:{{ 100 * (raccolta.cifra_attuale|int) / (raccolta.cifra_da_raggiungere|int) }}%;">
-              {{ 100 * (raccolta.cifra_attuale|int) / (raccolta.cifra_da_raggiungere|int) }}%
-            </div>
+            
             
             <h3>Donazioni:</h3>
             {% if current_user.is_authenticated %}

@@ -50,7 +50,7 @@ prossime alla scadenza -->
   <main class="col-lg-9 col-md-12">
     {% for raccolta in raccolte %}
     <!--bisogna visualizzare solo le raccolte ancora valide-->
-    {% if oggi <= raccolta.data_termine %}
+    {% if raccolta.status == 'attiva' %}
 
     <div class="card mb-3" style="max-width: 540px;">
       <div class="row g-0">

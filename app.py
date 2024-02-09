@@ -23,14 +23,38 @@ app.config['SECRET_KEY'] = 'Secret key del sito'
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+'''La seguente funzione deve essere eseguita prima di ogni richiesta.
+   Controlla quali raccolte sono scadute nel frattempo ovvero, se
+   data_oggi > data_termine and status = attiva. 
+   Se queste condizioni sono verificate allora:
+   status = terminata
+   Se poi la raccolta è andata a buon fine, ovvero se:
+   cifra_raccolta >= cifra_da_raggiungere
+   Allora:
+   portafoglio = portafoglio + cifra_raccolta WHERE id_utente = organizzatore_raccolta'''
+
+@app.before_request
+def update_raccolte_and_portafoglio():
+    app.logger.info('Inizio update_status_e_portafoglio')
+    # Esegui la funzione di controllo prima di ogni richiesta
+    try:
+        # Esegui la funzione di controllo prima di ogni richiesta
+        raccolte_dao.update_status_e_portafoglio()
+        #utenti_dao.update_portafoglio()
+        app.logger.info('Fine update_status_e_portafoglio')
+    except Exception as e:
+        print('Error during update:', str(e))
+
 # define the homepage
 @app.route('/')
 def home():
     
+    # quando raggiungi questa pagina, aggiorna status raccolte ed eventualmente portafoglio utenti
+    #raccolte_dao.update_status_e_portafoglio()
     '''Interroga il database, richiedi tutte le raccolte attive con le rispettive informazioni,
        ordinale mostrando prima quelle più vicine alla scadenza.
-       Quando si raggiunge questa pagina deve avvenire un controllo su tutte le raccolte in corso
-       per verificare che siano ancora valide'''
+       Deve avvenire un controllo sullo status delle raccolte in modo da mostrare solo
+       quelle attive.'''
 
     now = datetime.now()  # Get the current date and time
     current_date = now.date()  # Get the current date
@@ -167,7 +191,8 @@ def nuova_raccolta():
         - cifra_attuale = 0 perchè la raccolta è stata appena creata
         - organizzatore_raccolta = current_user
         - data creazione da definire al momento della sottomissione del form
-        - data_termine da definire in base a tipo_raccolta'''
+        - data_termine da definire in base a tipo_raccolta
+        - status (sempre attivo al momento della creazione)'''
             
     raccolta = request.form.to_dict()
 
@@ -210,14 +235,20 @@ def nuova_raccolta():
 
     # data del termine della raccolta, dipende da tipo_raccolta (senza secondi)
     if raccolta['tipo_raccolta'] == 'lampo':
-        raccolta['data_termine'] = (now + timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M")
+        #raccolta['data_termine'] = (now + timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M")
+        # per fare delle prove metto delta=1 minuto
+        raccolta['data_termine'] = (now + timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M")
     else:
         raccolta['data_termine'] =  (now + timedelta(days=14)).strftime("%Y-%m-%d %H:%M")
 
     # alla sua creazione, la cifra raggiunta della raccolta è zero
     raccolta['cifra_attuale'] = 0
 
+    # l'utente che crea la raccolta è necessariamente il current user
     raccolta['organizzatore_raccolta'] = current_user.id_utente
+
+    # al momento della sua creazione la raccolta è sempre attiva
+    raccolta['status'] = 'attiva'
     
     # verifica se è stata ricevuta un'immagine, in caso affermativo
     # ridimensionala e poi salvala con un nome che includa quello del creatore della raccolta
@@ -315,13 +346,10 @@ def raccolte_terminate():
     nell'HTML della pagina, se cifra_attuale >= cifra_raccolta, rappresentare graficamente in qualche modo
     che la raccolta è andata a buon fine'''
   
-    #raccolte_terminate_db = raccolte_dao.get_raccolte_terminate()
-    raccolte_terminate_db = raccolte_dao.get_raccolte()
+    #le raccolte sono terminate se lo status è 'terminata'
+    raccolte_terminate_db = raccolte_dao.get_raccolte_terminate()
 
-    now = datetime.now()  # Get the current date and time
-    data_oggi = now.strftime("%Y-%m-%d %H:%M")
-    
-    return render_template('raccolte_terminate.html', raccolte_terminate=raccolte_terminate_db, data_oggi=data_oggi)
+    return render_template('raccolte_terminate.html', raccolte_terminate=raccolte_terminate_db)
 
 # pagina con tutte le raccolte dell'utente
 @app.route('/le_mie_raccolte')

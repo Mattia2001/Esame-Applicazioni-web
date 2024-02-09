@@ -16,7 +16,6 @@ scadute più di recente -->
         </div>
     <div class="col-9">
     {% for raccolta in raccolte_terminate%}
-    {% if data_oggi > raccolta.data_termine%}
     <div class="card mb-3" style="max-width: 540px;">
       <div class="row g-0">
         {% if raccolta.immagine %}
@@ -51,7 +50,6 @@ scadute più di recente -->
         </div>
       </div>
     </div>
-    {% endif %}
     {% endfor %}
 </div>
 </main>
