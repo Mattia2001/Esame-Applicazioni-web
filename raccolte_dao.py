@@ -53,7 +53,7 @@ def get_raccolta_by_id(id):
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    sql = 'SELECT raccolte.id_raccolta,raccolte.nome_raccolta,raccolte.descrizione,raccolte.immagine,raccolte.data_creazione,raccolte.data_termine,raccolte.cifra_attuale,raccolte.cifra_da_raggiungere,raccolte.tipo_raccolta,raccolte.organizzatore_raccolta,raccolte.importo_minimo,raccolte.status,utenti.nome,utenti.cognome,utenti.immagine_utente FROM raccolte LEFT JOIN utenti ON raccolte.organizzatore_raccolta = utenti.id_utente WHERE raccolte.id_raccolta = ?'
+    sql = 'SELECT raccolte.id_raccolta,raccolte.nome_raccolta,raccolte.descrizione,raccolte.immagine,raccolte.data_creazione,raccolte.data_termine,raccolte.cifra_attuale,raccolte.cifra_da_raggiungere,raccolte.tipo_raccolta,raccolte.organizzatore_raccolta,raccolte.importo_minimo,raccolte.status,aggiornata,utenti.nome,utenti.cognome,utenti.immagine_utente FROM raccolte LEFT JOIN utenti ON raccolte.organizzatore_raccolta = utenti.id_utente WHERE raccolte.id_raccolta = ?'
     cursor.execute(sql, (id,))
     #retrieve one record at a time from the result set.
     post = cursor.fetchone()
@@ -97,7 +97,7 @@ def add_raccolta(raccolta):
     #raccolta['status'] = 'attiva' if raccolta['data_termine'] > data_oggi else 'terminata'
 
     if 'immagine_raccolta' in raccolta:
-        sql = 'INSERT INTO raccolte(nome_raccolta,descrizione,immagine,data_creazione,data_termine,cifra_attuale,cifra_da_raggiungere,tipo_raccolta,organizzatore_raccolta,importo_minimo,status) VALUES(?,?,?,?,?,?,?,?,?,?,?)'
+        sql = 'INSERT INTO raccolte(nome_raccolta,descrizione,immagine,data_creazione,data_termine,cifra_attuale,cifra_da_raggiungere,tipo_raccolta,organizzatore_raccolta,importo_minimo,status,aggiornata) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)'
         cursor.execute(sql, (raccolta['titolo_raccolta'],
                              raccolta['descrizione'], 
                              raccolta['immagine_raccolta'],
@@ -108,10 +108,11 @@ def add_raccolta(raccolta):
                              raccolta['tipo_raccolta'],
                              raccolta['organizzatore_raccolta'],
                              raccolta['importo_minimo'],
-                             raccolta['status']
+                             raccolta['status'],
+                             raccolta['aggiornata']
                              ))
     else:
-        sql = 'INSERT INTO raccolte(nome_raccolta,descrizione,data_creazione,data_termine,cifra_attuale,cifra_da_raggiungere,tipo_raccolta,organizzatore_raccolta,importo_minimo,status) VALUES(?,?,?,?,?,?,?,?,?,?)'
+        sql = 'INSERT INTO raccolte(nome_raccolta,descrizione,data_creazione,data_termine,cifra_attuale,cifra_da_raggiungere,tipo_raccolta,organizzatore_raccolta,importo_minimo,status,aggiornata) VALUES(?,?,?,?,?,?,?,?,?,?,?)'
         cursor.execute(sql, (raccolta['titolo_raccolta'],
                              raccolta['descrizione'], 
                              raccolta['data_creazione'],
@@ -121,7 +122,8 @@ def add_raccolta(raccolta):
                              raccolta['tipo_raccolta'],
                              raccolta['organizzatore_raccolta'],
                              raccolta['importo_minimo'],
-                             raccolta['status']
+                             raccolta['status'],
+                             raccolta['aggiornata']
                              ))
     try:
         conn.commit()
@@ -136,7 +138,13 @@ def add_raccolta(raccolta):
 
     return success
 
-# se data_scadenza > data_oggi and status = 'attiva' allora cambia status in 'terminata'
+'''Questa funzione verrà invocata ad ogni richiesta http per mezzo dell'apposito decoratore nell'app.py .
+Lo scopo di questa funzione è controllare quali raccolte sono scadute ed eventualmente aggioranre il portafoglio.
+Le raccolte possono terminare o perchè è trascorso il tempo massimo e quindi l'obiettivo non è stato raggiunto o
+perchè hanno raggiunto l'obiettivo. Nel primo caso lo status viene cambiato in "terminata" e i soldi non vengono trasferiti.
+Nel secondo caso lo status viene cambiato in "terminata", i soldi trasferiti e il campo "aggioranta" cambiato da "no" a "si".
+L'ultimo campo è necessario per evitare che nuovi soldi vengano trasferiti ad ogni richiesta http.
+'''
 def update_status_e_portafoglio():
 
     conn = sqlite3.connect('db/raccolte_fondi.db')
@@ -148,22 +156,33 @@ def update_status_e_portafoglio():
     now = datetime.now()
     data_oggi = now.strftime("%Y-%m-%d %H:%M")
 
-    # Aggiorna lo status delle raccolte
-    sql_update_status = 'UPDATE raccolte SET status = "terminata" WHERE strftime("%Y-%m-%d %H:%M", data_termine) <= ? AND status = "attiva"'
+    # Aggiorna lo status delle raccolte se la data odierna è maggiore di quella di scadenza
+    # o la raccolta ha superato l'obiettivo
+    sql_update_status = 'UPDATE raccolte SET status = "terminata" WHERE strftime("%Y-%m-%d %H:%M", data_termine) <= ? AND status = "attiva" OR (cifra_attuale >= cifra_da_raggiungere AND status = "attiva")'
     cursor.execute(sql_update_status, (data_oggi, ))
 
-    try:
-        conn.commit()
-        success = True
-    except Exception as e:
-        print('Error during status update:', str(e))
-        conn.rollback()
+    # Seleziona le raccolte che necessitano di aggiornamento del portafoglio
+    raccolte_da_aggiornare = cursor.execute('''
+    SELECT id_raccolta, organizzatore_raccolta, cifra_attuale
+    FROM raccolte
+    WHERE status = "terminata" AND aggiornata = "no"
+    ''').fetchall()
 
-    # Lo status è stato aggiornato, se la cifra attuale è superiore alla cifra da raggiungere, aggiorna il portafoglio
-    sql_update_portafoglio = 'UPDATE utenti ' \
-                         'SET portafoglio = COALESCE(portafoglio, 0) + (SELECT COALESCE(SUM(cifra_attuale), 0) FROM raccolte WHERE utenti.id_utente = raccolte.organizzatore_raccolta AND raccolte.cifra_attuale >= raccolte.cifra_da_raggiungere AND raccolte.status = "terminata")'
+    # Aggiorna il portafoglio per ogni raccolta
+    for raccolta in raccolte_da_aggiornare:
+        cursor.execute('''
+        UPDATE utenti
+        SET portafoglio = COALESCE(portafoglio, 0) + ?
+        WHERE id_utente = ?
+        ''', (raccolta['cifra_attuale'], raccolta['organizzatore_raccolta']))
 
-    cursor.execute(sql_update_portafoglio)
+        # Segna la raccolta come aggiornata
+        cursor.execute('''
+        UPDATE raccolte
+        SET aggiornata = "si"
+        WHERE id_raccolta = ?
+        ''', (raccolta['id_raccolta'],))
+
 
     try:
         conn.commit()

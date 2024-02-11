@@ -40,6 +40,24 @@ prossime alla scadenza -->
         </form>
       </div>
     </section>
+    {% else %}
+    <div class="container d-flex justify-content-center align-items-center">
+      <div class="row">
+          <div class="col-3">
+      <div class="card" style="width: 18rem;">
+        {% if current_user.immagine_utente%}
+          <img src="{{ url_for('static', filename= current_user.immagine_utente) }}" class="card-img-top" alt="immagine dell'utente">
+        {% else%}
+        <img src="{{ url_for('static', filename= 'user.jpg') }}" class="card-img-top" alt="immagine dell'utente">
+        {% endif %}
+          <div class="card-body">
+          <h5 class="card-title">Benvenuto {{current_user.nome}} {{current_user.cognome}}</h5>
+          </div>
+      </div>
+      </div>
+      </div>  
+  </div>
+
     {% endif %}
   </aside>
 

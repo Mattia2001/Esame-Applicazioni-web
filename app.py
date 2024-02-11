@@ -232,14 +232,14 @@ def nuova_raccolta():
     # Get the current date and time
     now = datetime.now()
 
-    # Extract the date, hour, minute
-    current_date, current_hour, current_minute = now.date(), now.hour, now.minute
-    
     # data di creazione della raccolta
     raccolta['data_creazione'] = now.strftime("%Y-%m-%d %H:%M")
 
     # al momento della sua creazione la raccolta è sempre attiva
     raccolta['status'] = 'attiva'
+
+    # al momento della sua creazione, i soldi non sono ancora trasferiti sul portafoglio
+    raccolta['aggiornata'] = 'no'
     
     # data del termine della raccolta, dipende da tipo_raccolta (senza secondi)
     if raccolta['tipo_raccolta'] == 'lampo':
@@ -282,10 +282,10 @@ def nuova_raccolta():
         secondi = int(datetime.now().timestamp())       
 
         # Saving the image with a unique filename in the 'static' directory
-        img.save('static/@' + current_user.nome.lower() + current_user.cognome.lower() + '-' + str(secondi) + '.' + ext)
+        img.save('static/@' + current_user.nome.lower() + '-' + current_user.cognome.lower() + '-' + str(secondi) + '.' + ext)
 
         # Updating the 'immagine_post' field in the post dictionary with the image filename
-        raccolta['immagine_raccolta'] = '@' + current_user.nome.lower() + current_user.cognome.lower() + str(secondi) + '.' + ext
+        raccolta['immagine_raccolta'] = '@' + current_user.nome.lower() + '-' + current_user.cognome.lower() + str(secondi) + '.' + ext
 
     # la raccolta è pronta per essere aggiunta alla tabella raccolte
     # esegui un print dei dati ricevuti dal form

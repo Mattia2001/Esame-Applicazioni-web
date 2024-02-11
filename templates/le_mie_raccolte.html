@@ -21,7 +21,7 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                 i dati dell'utente che ha eseguito l'accesso-->
             </div>
             <div class="col-9">
-                <h2>Raccolte in corso:</h2>
+                <h2>Le tue raccolte in corso:</h2>
                 {% for raccolta in raccolte %}
                     {% if raccolta.status == "attiva" %}
                         <div class="card mb-3" style="max-width: 540px;">
