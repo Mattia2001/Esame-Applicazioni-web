@@ -138,6 +138,74 @@ def add_raccolta(raccolta):
 
     return success
 
+# modifica la raccolta in corso con nuovi dati forniti dall'utente
+def modifica_raccolta_by_id_raccolta(id_raccolta, nuovi_dati):
+
+    success = False
+
+    conn = sqlite3.connect('db/raccolte_fondi.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    # l'istruzione UPDATE non supporta la stessa sintassi di INSERT
+    if 'nuova_immagine_raccolta' in nuovi_dati:
+        sql = 'UPDATE raccolte SET nome_raccolta = ?, descrizione = ?, immagine = ?, cifra_da_raggiungere = ?, importo_minimo = ? WHERE id_raccolta = ?'
+        cursor.execute(sql, (nuovi_dati['nuovo_titolo_raccolta'],
+                            nuovi_dati['nuova_descrizione'], 
+                            nuovi_dati['nuova_immagine_raccolta'],
+                            nuovi_dati['nuova_cifra_da_raggiungere'],
+                            nuovi_dati['nuovo_importo_minimo'], 
+                            id_raccolta))
+        
+    else:
+        sql = 'UPDATE raccolte SET nome_raccolta = ?, descrizione = ?, cifra_da_raggiungere = ?, importo_minimo = ? WHERE id_raccolta = ?'
+        cursor.execute(sql, (nuovi_dati['nuovo_titolo_raccolta'],
+                            nuovi_dati['nuova_descrizione'], 
+                            nuovi_dati['nuova_cifra_da_raggiungere'],
+                            nuovi_dati['nuovo_importo_minimo'], 
+                            id_raccolta))
+    
+    try:
+            conn.commit()
+            success = True
+    except Exception as e:
+            print('ERROR', str(e))
+            # if something goes wrong: rollback
+            conn.rollback()
+
+    cursor.close()
+    conn.close()
+
+    return success
+
+def cancella_raccolta_e_donazioni(id_raccolta):
+
+    success = False
+
+    conn = sqlite3.connect('db/raccolte_fondi.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    # Prima cancella tutte le donazioni associate alla raccolta
+    cursor.execute('DELETE FROM donazioni WHERE raccolta = ?', (id_raccolta,))
+    
+    # Poi cancella la raccolta stessa
+    cursor.execute('DELETE FROM raccolte WHERE id_raccolta = ?', (id_raccolta,))
+    
+    try:
+            conn.commit()
+            success = True
+    except Exception as e:
+            print('ERROR', str(e))
+            # if something goes wrong: rollback
+            conn.rollback()
+
+    cursor.close()
+    conn.close()
+
+    return success
+
+
 '''Questa funzione verrà invocata ad ogni richiesta http per mezzo dell'apposito decoratore nell'app.py .
 Lo scopo di questa funzione è controllare quali raccolte sono scadute ed eventualmente aggioranre il portafoglio.
 Le raccolte possono terminare o perchè è trascorso il tempo massimo e quindi l'obiettivo non è stato raggiunto o
@@ -170,7 +238,7 @@ def update_status_e_portafoglio():
         sql_aggiorna_portafoglio = 'UPDATE utenti SET portafoglio = COALESCE(portafoglio, 0) + ? WHERE id_utente = ?'
         cursor.execute(sql_aggiorna_portafoglio, (raccolta['cifra_attuale'], raccolta['organizzatore_raccolta']))
 
-        # Ora che il portafoglio è aggiornato, segna la raccolta come aggiornata
+        # Ora che il portafoglio è aggiornato, segna la raccolta come aggiornata=si
         sql_aggiornata_si = 'UPDATE raccolte SET aggiornata = "si" WHERE id_raccolta = ?'
         cursor.execute(sql_aggiornata_si, (raccolta['id_raccolta'],))
 
@@ -178,7 +246,7 @@ def update_status_e_portafoglio():
         conn.commit()
         success = True
     except Exception as e:
-        print('Error during portafoglio update:', str(e))
+        print('Errore durante l\'aggiornamento del portafoglio:', str(e))
         conn.rollback()
 
     conn.close()

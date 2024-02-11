@@ -374,6 +374,48 @@ def le_mie_raccolte():
 
     return render_template('le_mie_raccolte.html', raccolte_utente = raccolte_utente_db)
 
+# funzione che permette di modificare la raccolta in corso
+@app.route('/modifica_raccolta/<int:id_raccolta>', methods=['POST'])
+@login_required
+def modifica_raccolta(id_raccolta):
+
+    # Ricevi dal form tutti i dati da inserire nella nuova raccolta
+    
+    nuovi_dati = request.form.to_dict()
+
+    if nuovi_dati['nuovo_titolo_raccolta'] == '':
+        flash('Il nuovo titolo non può essere vuoto', 'danger')
+        app.logger.error('Il nuovo titolo non può essere vuoto')
+        return redirect(url_for('le_mie_raccolte'))
+
+    # controlla che la nuova descrizione non sia vuota
+    if nuovi_dati['nuova_descrizione'] == '':
+        app.logger.error('La nuova descrizione non può essere vuota!')
+        return redirect(url_for('le_mie_raccolte'))
+    
+    # controlla che la nuova cifra da raggiungere non sia vuota
+    if nuovi_dati['nuova_cifra_da_raggiungere'] == '':
+        app.logger.error('La nuova cifra da raggiungere non può essere vuota!')
+        return redirect(url_for('le_mie_raccolte'))
+    
+    # controlla che il nuovo importo minimo non sia vuoto
+    if nuovi_dati['nuovo_importo_minimo'] == '':
+        app.logger.error('Il nuovo importo minimo non può essere vuoto!')
+        return redirect(url_for('le_mie_raccolte'))
+
+    raccolte_dao.modifica_raccolta_by_id_raccolta(id_raccolta, nuovi_dati)
+
+    return redirect(url_for('le_mie_raccolte'))
+
+# funzione che permette di cancellare la raccolta in corso e tutte le donazioni ad essa effettuate
+@app.route('/cancella_raccolta/<int:id_raccolta>', methods=['POST'])
+@login_required
+def cancella_raccolta(id_raccolta):
+    
+    raccolte_dao.cancella_raccolta_e_donazioni(id_raccolta)
+
+    return redirect(url_for('le_mie_raccolte'))
+
 @app.route('/about')
 def about():
     author_picture = 'mattia_antonini.jpg'

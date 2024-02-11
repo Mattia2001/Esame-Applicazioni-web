@@ -51,14 +51,69 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                                             <p class="card-text"><small class="text-muted">Raccolta creata il: {{ raccolta.data_creazione }}</small></p>
                                             <p class="card-text"><small class="text-muted">Termina il: {{ raccolta.data_termine }}</small></p>
                                         {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-                <!--Qui finiscono le raccolte attive (che si devono poter modificare)
-                Iniziano quelle terminate e non più modificabili-->
+
+<!-- Pulsante Modifica -->
+<button type="button"  data-bs-toggle="modal" data-bs-target="#createModal">
+    Modifica
+  </button>
+    <div class="modal fade" id="createModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5">Modifica la raccolta fondi "{{raccolta.nome_raccolta}}"</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{url_for('modifica_raccolta', id_raccolta=raccolta.id_raccolta) }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                <div class="mb-3">
+                    <label for="nuovotitoloInput" class="form-label">Nuovo titolo</label>
+                    <input type="text" class="form-control" id="nuovotitoloInput" name="nuovo_titolo_raccolta" required>
+                </div>
+                <div class="mb-3">
+                    <label for="nuovodescrizioneTextArea" class="form-label">Nuova descrizione</label>
+                    <textarea class="form-control" id="nuovodescrizioneTextArea" name="nuova_descrizione" rows="3"
+                    placeholder="Inserisci una nuova descrizione per la tua raccolta fondi" required minlength="30"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="nuovoimageFile" class="form-label">Aggiungi una nuova immagine, se vuoi</label>
+                    <input class="form-control" name="nuova_immagine_raccolta" type="file" id="nuovoimageFile">
+                </div>
+                <div class="input-group mb-3">
+                    <label for="nuovo_cifra_da_raggiungereInput" class="form-label mb-2">Nuova cifra da raggiungere</label>
+                    <span class="input-group-text">€</span>
+                    <input type="text" class="form-control" id="nuovo_cifra_da_raggiungereInput" name="nuova_cifra_da_raggiungere" aria-label="Cifra da raggiungere" required>
+                </div>
+                <div class="input-group mb-3">
+                    <label for="nuovo_importo_minimoInput" class="form-label mb-2">Nuovo importo minimo</label>
+                    <span class="input-group-text">€</span>
+                    <input type="text" class="form-control" id="nuovo_importo_minimoInput" name="nuovo_importo_minimo" aria-label="Importo minimo" required>
+                </div>
+                <input type="number" name="id_raccolta" value="{{ raccolta.id_raccolta }}" hidden>
+                </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+                <button type="submit" class="btn btn-primary">Modifica</button>
+                </div>
+            </form>
+            </div>
+        </div>
+    </div>                  
+
+                                        
+<!-- Pulsante Cancella -->
+<form action="{{ url_for('cancella_raccolta', id_raccolta=raccolta.id_raccolta) }}" method="POST" onsubmit="return confirm('Sei sicuro di voler cancellare questa raccolta?');">
+    <input type="hidden" name="id_raccolta" value="{{ raccolta.id_raccolta }}">
+    <button type="submit" class="btn btn-danger">Cancella</button>
+</form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endfor %}
+<!--Qui finiscono le raccolte attive (che si devono poter modificare)
+Iniziano quelle terminate e non più modificabili-->
 
                 <h2>Le tue raccolte terminate:</h2>
                 {% for raccolta in raccolte_utente %}
