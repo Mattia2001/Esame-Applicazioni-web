@@ -75,19 +75,20 @@
                   <div class="row g-0">
                     <div class="col-md-8">
                       <div class="card-body">
-                        <!--se l'utente non è anonimo mostra nome e cognome-->
-                        {% if donazione.donatore != NULL%}
-                        <h5 class="card-title"> 
-                            Donatore: {{donazione.nome | e}} {{donazione.cognome | e}}
+                        <h5 class="card-title">
+                          <!--se l'utente non è anonimo mostra nome e cognome-->
+                          Donatore: 
+                          {% if donazione.donatore != None %}
+                          {{donazione.nome | e}} {{donazione.cognome | e}}
+                          {% else %}
+                          utente anonimo
+                          {% endif %}
                         </h5>
-                        {% else %}
-                        <h5 class="card-title"> 
-                          Donatore: utente anonimo
-                      </h5>
-                      {% endif %}
                         <p class="card-text">{{donazione.testo_donazione}}</p>
                         <p class="card-text">Importo donazione: {{donazione.importo | e}} €</p>
                         <p class="card-text">Data donazione: {{donazione.data_donazione | e}}</p>
+
+                        
                         
                       </div>
                     </div>

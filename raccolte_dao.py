@@ -162,27 +162,17 @@ def update_status_e_portafoglio():
     cursor.execute(sql_update_status, (data_oggi, ))
 
     # Seleziona le raccolte che necessitano di aggiornamento del portafoglio
-    raccolte_da_aggiornare = cursor.execute('''
-    SELECT id_raccolta, organizzatore_raccolta, cifra_attuale
-    FROM raccolte
-    WHERE status = "terminata" AND aggiornata = "no"
-    ''').fetchall()
+    sql_raccolte_da_aggiornare = 'SELECT id_raccolta, organizzatore_raccolta, cifra_attuale FROM raccolte WHERE status = "terminata" AND aggiornata = "no"'
+    raccolte_da_aggiornare = cursor.execute(sql_raccolte_da_aggiornare).fetchall()
 
     # Aggiorna il portafoglio per ogni raccolta
     for raccolta in raccolte_da_aggiornare:
-        cursor.execute('''
-        UPDATE utenti
-        SET portafoglio = COALESCE(portafoglio, 0) + ?
-        WHERE id_utente = ?
-        ''', (raccolta['cifra_attuale'], raccolta['organizzatore_raccolta']))
+        sql_aggiorna_portafoglio = 'UPDATE utenti SET portafoglio = COALESCE(portafoglio, 0) + ? WHERE id_utente = ?'
+        cursor.execute(sql_aggiorna_portafoglio, (raccolta['cifra_attuale'], raccolta['organizzatore_raccolta']))
 
-        # Segna la raccolta come aggiornata
-        cursor.execute('''
-        UPDATE raccolte
-        SET aggiornata = "si"
-        WHERE id_raccolta = ?
-        ''', (raccolta['id_raccolta'],))
-
+        # Ora che il portafoglio è aggiornato, segna la raccolta come aggiornata
+        sql_aggiornata_si = 'UPDATE raccolte SET aggiornata = "si" WHERE id_raccolta = ?'
+        cursor.execute(sql_aggiornata_si, (raccolta['id_raccolta'],))
 
     try:
         conn.commit()
