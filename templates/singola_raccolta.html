@@ -23,7 +23,7 @@
             <p>Totale raccolto: {{raccolta.cifra_attuale | e}} € / {{raccolta.cifra_da_raggiungere | e}} €</p>
             
             
-            <h3>Donazioni:</h3>
+            
             {% if current_user.is_authenticated and raccolta.status == "attiva" %}
 
             <!--Pulsante per effettuare una donazione, dedve comparire solo per le raccolte attive-->
@@ -64,10 +64,12 @@
                   </div>
                 </div>
               </div>
-
+              {% endif %}
               <!--Qui verranno visualizzate tutte le varie donazioni-->
 
               <main class="col-lg-9 col-md-12">
+                <h3>Donazioni:</h3>
+                {% if current_user.is_authenticated%}
                 {% for donazione in donazioni %}
                 <div class="card mb-3" style="max-width: 540px;">
                   <div class="row g-0">
@@ -91,6 +93,7 @@
                     </div>
                   </div>
                 </div>
+                
                 {% endfor %}
 
             {% else %}
