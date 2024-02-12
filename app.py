@@ -126,6 +126,8 @@ def iscriviti_post():
         # Updating the 'immagine_utnete' field in the user dictionary with the image filename
         nuovo_utente_form['immagine_utente'] = img_profilo
 
+        nuovo_utente_form['portafoglio'] = 0
+
         success = utenti_dao.add_user(nuovo_utente_form)
 
         if success:
