@@ -11,11 +11,7 @@ def get_raccolte():
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    '''The query must select all the data necessary to display the posts together with the
-    data of the respective profiles. Thus we need a JOIN operation where posts.id_utente = utenti.id.
-    Posts are then ordered depending on publication date in ascending order'''
-
-    sql = 'SELECT raccolte.id_raccolta, raccolte.nome_raccolta, raccolte.descrizione, raccolte.immagine, raccolte.data_creazione, raccolte.data_termine, raccolte.cifra_attuale, raccolte.cifra_da_raggiungere, raccolte.tipo_raccolta, raccolte.organizzatore_raccolta, raccolte.importo_minimo, raccolte.status, utenti.nome, utenti.cognome FROM raccolte LEFT JOIN utenti ON raccolte.organizzatore_raccolta = utenti.id_utente ORDER BY data_creazione DESC'
+    sql = 'SELECT raccolte.id_raccolta, raccolte.nome_raccolta, raccolte.descrizione, raccolte.immagine, raccolte.data_creazione, raccolte.data_termine, raccolte.cifra_attuale, raccolte.cifra_da_raggiungere, raccolte.tipo_raccolta, raccolte.organizzatore_raccolta, raccolte.importo_minimo, raccolte.status, raccolte.aggiornata, raccolte.importo_massimo, utenti.nome, utenti.cognome FROM raccolte LEFT JOIN utenti ON raccolte.organizzatore_raccolta = utenti.id_utente ORDER BY data_creazione DESC'
     cursor.execute(sql)
     raccolte = cursor.fetchall()
 
@@ -53,7 +49,7 @@ def get_raccolta_by_id(id):
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    sql = 'SELECT raccolte.id_raccolta,raccolte.nome_raccolta,raccolte.descrizione,raccolte.immagine,raccolte.data_creazione,raccolte.data_termine,raccolte.cifra_attuale,raccolte.cifra_da_raggiungere,raccolte.tipo_raccolta,raccolte.organizzatore_raccolta,raccolte.importo_minimo,raccolte.status,aggiornata,utenti.nome,utenti.cognome,utenti.immagine_utente FROM raccolte LEFT JOIN utenti ON raccolte.organizzatore_raccolta = utenti.id_utente WHERE raccolte.id_raccolta = ?'
+    sql = 'SELECT raccolte.id_raccolta,raccolte.nome_raccolta,raccolte.descrizione,raccolte.immagine,raccolte.data_creazione,raccolte.data_termine,raccolte.cifra_attuale,raccolte.cifra_da_raggiungere,raccolte.tipo_raccolta,raccolte.organizzatore_raccolta,raccolte.importo_minimo,raccolte.status,raccolte.aggiornata,raccolte.importo_massimo,utenti.nome,utenti.cognome,utenti.immagine_utente FROM raccolte LEFT JOIN utenti ON raccolte.organizzatore_raccolta = utenti.id_utente WHERE raccolte.id_raccolta = ?'
     cursor.execute(sql, (id,))
     #retrieve one record at a time from the result set.
     post = cursor.fetchone()
@@ -97,7 +93,7 @@ def add_raccolta(raccolta):
     #raccolta['status'] = 'attiva' if raccolta['data_termine'] > data_oggi else 'terminata'
 
     if 'immagine_raccolta' in raccolta:
-        sql = 'INSERT INTO raccolte(nome_raccolta,descrizione,immagine,data_creazione,data_termine,cifra_attuale,cifra_da_raggiungere,tipo_raccolta,organizzatore_raccolta,importo_minimo,status,aggiornata) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)'
+        sql = 'INSERT INTO raccolte(nome_raccolta,descrizione,immagine,data_creazione,data_termine,cifra_attuale,cifra_da_raggiungere,tipo_raccolta,organizzatore_raccolta,importo_minimo,status,aggiornata,importo_massimo) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)'
         cursor.execute(sql, (raccolta['titolo_raccolta'],
                              raccolta['descrizione'], 
                              raccolta['immagine_raccolta'],
@@ -109,10 +105,11 @@ def add_raccolta(raccolta):
                              raccolta['organizzatore_raccolta'],
                              raccolta['importo_minimo'],
                              raccolta['status'],
-                             raccolta['aggiornata']
+                             raccolta['aggiornata'],
+                             raccolta['importo_massimo']
                              ))
     else:
-        sql = 'INSERT INTO raccolte(nome_raccolta,descrizione,data_creazione,data_termine,cifra_attuale,cifra_da_raggiungere,tipo_raccolta,organizzatore_raccolta,importo_minimo,status,aggiornata) VALUES(?,?,?,?,?,?,?,?,?,?,?)'
+        sql = 'INSERT INTO raccolte(nome_raccolta,descrizione,data_creazione,data_termine,cifra_attuale,cifra_da_raggiungere,tipo_raccolta,organizzatore_raccolta,importo_minimo,status,aggiornata,importo_massimo) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)'
         cursor.execute(sql, (raccolta['titolo_raccolta'],
                              raccolta['descrizione'], 
                              raccolta['data_creazione'],
@@ -123,7 +120,8 @@ def add_raccolta(raccolta):
                              raccolta['organizzatore_raccolta'],
                              raccolta['importo_minimo'],
                              raccolta['status'],
-                             raccolta['aggiornata']
+                             raccolta['aggiornata'],
+                             raccolta['importo_massimo']
                              ))
     try:
         conn.commit()
@@ -149,20 +147,22 @@ def modifica_raccolta_by_id_raccolta(id_raccolta, nuovi_dati):
 
     # l'istruzione UPDATE non supporta la stessa sintassi di INSERT
     if 'nuova_immagine_raccolta' in nuovi_dati:
-        sql = 'UPDATE raccolte SET nome_raccolta = ?, descrizione = ?, immagine = ?, cifra_da_raggiungere = ?, importo_minimo = ? WHERE id_raccolta = ?'
+        sql = 'UPDATE raccolte SET nome_raccolta = ?, descrizione = ?, immagine = ?, cifra_da_raggiungere = ?, importo_minimo = ?, importo_massimo=? WHERE id_raccolta = ?'
         cursor.execute(sql, (nuovi_dati['nuovo_titolo_raccolta'],
                             nuovi_dati['nuova_descrizione'], 
                             nuovi_dati['nuova_immagine_raccolta'],
                             nuovi_dati['nuova_cifra_da_raggiungere'],
                             nuovi_dati['nuovo_importo_minimo'], 
+                            nuovi_dati['nuovo_importo_massimo'],
                             id_raccolta))
         
     else:
-        sql = 'UPDATE raccolte SET nome_raccolta = ?, descrizione = ?, cifra_da_raggiungere = ?, importo_minimo = ? WHERE id_raccolta = ?'
+        sql = 'UPDATE raccolte SET nome_raccolta = ?, descrizione = ?, cifra_da_raggiungere = ?, importo_minimo = ?, importo_massimo = ? WHERE id_raccolta = ?'
         cursor.execute(sql, (nuovi_dati['nuovo_titolo_raccolta'],
                             nuovi_dati['nuova_descrizione'], 
                             nuovi_dati['nuova_cifra_da_raggiungere'],
-                            nuovi_dati['nuovo_importo_minimo'], 
+                            nuovi_dati['nuovo_importo_minimo'],
+                            nuovi_dati['nuovo_importo_massimo'], 
                             id_raccolta))
     
     try:

@@ -53,11 +53,11 @@ def add_user(user):
     cursor = conn.cursor()
 
     success = False
-    sql = 'INSERT INTO utenti(nome,cognome,email,password,immagine_utente) VALUES(?,?,?,?,?)'
+    sql = 'INSERT INTO utenti(nome,cognome,email,password,immagine_utente,portafoglio) VALUES(?,?,?,?,?,?)'
 
     try:
         cursor.execute(
-            sql, (user['nome'], user['cognome'], user['email'], user['password'], user['immagine_utente']))
+            sql, (user['nome'], user['cognome'], user['email'], user['password'], user['immagine_utente'], user['portafoglio']))
         conn.commit()
         success = True
     except Exception as e:

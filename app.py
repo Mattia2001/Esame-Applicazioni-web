@@ -186,6 +186,7 @@ def nuova_raccolta():
         - immagine_raccolta
         - cifra_da_raggiungere
         - importo minimo
+        - importo massimo
         - tipo_raccolta
         
     Quindi si devono aggiungere anche:
@@ -204,17 +205,26 @@ def nuova_raccolta():
 
     # controlla che la descrizione non sia vuota
     if raccolta['descrizione'] == '':
+        flash('La descrizione non può essere vuota', 'danger')
         app.logger.error('La descrizione non può essere vuota!')
         return redirect(url_for('home'))
     
     # controlla che la cifra da raggiungere non sia vuota
     if raccolta['cifra_da_raggiungere'] == '':
+        flash('La cifra da raggiungere non può essere vuota', 'danger')
         app.logger.error('La cifra da raggiungere non può essere vuota!')
         return redirect(url_for('home'))
     
     # controlla che l'importo minimo non sia vuoto
     if raccolta['importo_minimo'] == '':
+        flash('L\'importo minimo non può essere vuoto', 'danger')
         app.logger.error('L\' importo minimo non può essere vuoto!')
+        return redirect(url_for('home'))
+    
+    # controlla che l'importo massimo non sia vuoto
+    if raccolta['importo_massimo'] == '':
+        flash('L\'importo massimo non può essere vuoto', 'danger')
+        app.logger.error('L\' importo massimo non può essere vuoto!')
         return redirect(url_for('home'))
     
     # il tipo di raccolta: lampo o normale
@@ -254,6 +264,10 @@ def nuova_raccolta():
     # alla sua creazione, la cifra raggiunta della raccolta è zero
     raccolta['cifra_attuale'] = 0
 
+    raccolta['importo_minimo'] = int(raccolta['importo_minimo'])
+    raccolta['importo_massimo'] = int(raccolta['importo_massimo'])
+
+
     # l'utente che crea la raccolta è necessariamente il current user
     raccolta['organizzatore_raccolta'] = current_user.id_utente
 
@@ -285,7 +299,7 @@ def nuova_raccolta():
         img.save('static/@' + current_user.nome.lower() + '-' + current_user.cognome.lower() + '-' + str(secondi) + '.' + ext)
 
         # Updating the 'immagine_post' field in the post dictionary with the image filename
-        raccolta['immagine_raccolta'] = '@' + current_user.nome.lower() + '-' + current_user.cognome.lower() + str(secondi) + '.' + ext
+        raccolta['immagine_raccolta'] = '@' + current_user.nome.lower() + '-' + current_user.cognome.lower() + '-' + str(secondi) + '.' + ext
 
     # la raccolta è pronta per essere aggiunta alla tabella raccolte
     # esegui un print dei dati ricevuti dal form
@@ -326,15 +340,25 @@ def new_donazione():
 
     donazione = request.form.to_dict()
 
-    # controlla se l'utente è anonimo
+    # controlla che l'importo della donazione sia maggiore dell'importo minimo previsto
+    if int(donazione['importo']) < int(donazione['importo_minimo_raccolta']):
+        app.logger.error('L\' importo della donazione è minore di quello minimo previsto dalla raccolta!')
+        return redirect(url_for('singola_raccolta', id=donazione['id_raccolta']))
+
+    # controlla che l'importo della donazione sia minore dell'importo massimo previsto
+    if int(donazione['importo']) > int(donazione['importo_massimo_raccolta']):
+        app.logger.error('L\' importo della donazione è maggiore di quello massimo previsto dalla raccolta!')
+        return redirect(url_for('singola_raccolta', id=donazione['id_raccolta']))
+
+    # id della raccolta
+    donazione['id_raccolta'] = int(donazione['id_raccolta'])
+
+    # controlla se l'utente è anonimo, in caso il campo "donatore" diventa None
     tipo_donatore = donazione.get('utente_anonimo', 'off')  # 'off' as default if not present
     if tipo_donatore == 'on':
         donazione['donatore'] = None
     else:
         donazione['donatore'] = current_user.id_utente
-
-    # id della raccolta
-    donazione['id_raccolta'] = int(donazione['id_raccolta'])
     
     # aggiungi la data di oggi
     # Get the current date and time
@@ -402,6 +426,12 @@ def modifica_raccolta(id_raccolta):
     if nuovi_dati['nuovo_importo_minimo'] == '':
         app.logger.error('Il nuovo importo minimo non può essere vuoto!')
         return redirect(url_for('le_mie_raccolte'))
+    
+    # controlla che il nuovo importo massimo non sia vuoto
+    if nuovi_dati['nuovo_importo_massimo'] == '':
+        app.logger.error('Il nuovo importo massimo non può essere vuoto!')
+        return redirect(url_for('le_mie_raccolte'))
+
 
     raccolte_dao.modifica_raccolta_by_id_raccolta(id_raccolta, nuovi_dati)
 

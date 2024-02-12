@@ -20,7 +20,7 @@ prossime alla scadenza -->
   {% endif %}
 {% endwith %}
 
-<aside id="myaside" class="col-lg-3 col-md-12">
+<aside id="myaside" class="col-lg-3">
     {% if not current_user.is_authenticated %}
     <section>
       <h3>Login</h3>
@@ -95,6 +95,7 @@ prossime alla scadenza -->
             {% if raccolta.tipo_raccolta == 'lampo' %}
             <p class="card-text"><small class="text-body-secondary">Raccolta creata alle ore: {{raccolta.data_creazione.split(' ')[1]}}</small></p>
             <p class="card-text"><small class="text-body-secondary">Termina alle ore: {{raccolta.data_termine.split(' ')[1]}}</small></p>
+            <p class="card-text"><small class="text-body-secondary">Mancano {{raccolta.data_termine.split(' ')[1] - raccolta.data_creazione.split(' ')[1]}} minuti al termine.</small></p>
             {% else %}
             <p class="card-text"><small class="text-body-secondary">Raccolta creata il: {{raccolta.data_creazione}}</small></p>
             <p class="card-text"><small class="text-body-secondary">Termina il: {{raccolta.data_termine}}</small></p>
@@ -119,7 +120,7 @@ prossime alla scadenza -->
         <h1 class="modal-title fs-5">Crea una nuova raccolta fondi</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form action="/raccolte/new" method="POST" enctype="multipart/form-data">
+      <form action="/raccolte/new" method="POST" enctype="multipart/form-data" class="p-3">
         <div class="modal-body">
           <div class="mb-3">
             <label for="titoloInput" class="form-label">Titolo</label>
@@ -134,15 +135,26 @@ prossime alla scadenza -->
             <label for="imageFile" class="form-label">Aggiungi un'immagine, se vuoi</label>
             <input class="form-control" name="immagine_raccolta" type="file" id="imageFile">
           </div>
-          <div class="input-group mb-3">
-            <label for="cifra_da_raggiungereInput" class="form-label mb-2">Cifra da raggiungere</label>
-            <span class="input-group-text">€</span>
-            <input type="text" class="form-control" id="cifra_da_raggiungereInput" name="cifra_da_raggiungere" aria-label="Cifra da raggiungere" required>
+          <div class="mb-3">
+            <label for="cifra_da_raggiungereInput" class="form-label">Cifra da raggiungere</label>
+            <div class="input-group">
+              <span class="input-group-text">€</span>
+              <input type="text" class="form-control" id="cifra_da_raggiungereInput" name="cifra_da_raggiungere" required>
+            </div>
           </div>
-          <div class="input-group mb-3">
-            <label for="importo_minimoInput" class="form-label mb-2">Importo minimo</label>
-            <span class="input-group-text">€</span>
-            <input type="text" class="form-control" id="importo_minimoInput" name="importo_minimo" aria-label="Importo minimo" required>
+          <div class="mb-3">
+            <label for="importo_minimoInput" class="form-label">Importo minimo</label>
+            <div class="input-group">
+              <span class="input-group-text">€</span>
+              <input type="text" class="form-control" id="importo_minimoInput" name="importo_minimo" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="importo_massimoInput" class="form-label">Importo massimo</label>
+            <div class="input-group">
+              <span class="input-group-text">€</span>
+              <input type="text" class="form-control" id="importo_massimoInput" name="importo_massimo" required>
+            </div>
           </div>
           <div class="mb-3 form-check">
             <label class="form-check-label" for="tipo_raccolta_checkbox">Lampo</label>
