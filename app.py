@@ -334,7 +334,6 @@ def singola_raccolta(id):
 
 # effettua una donazione
 @app.route('/donazioni/new', methods=['POST'])
-@login_required
 def new_donazione():
     
     # aggiungi la donazione ricevuta tramite form alla tabella delle donazioni
@@ -342,6 +341,18 @@ def new_donazione():
 
     donazione = request.form.to_dict()
 
+    # controlla che il nome del donatore non sia vuoto
+    if donazione['nome_donatore'] == '':
+        flash('Il nome del donatore non può essere vuoto', 'danger')
+        app.logger.error('Il nome del donatore non può essere vuoto')
+        return redirect(url_for('singola_raccolta', id=donazione['id_raccolta']))
+    
+    # controlla che il cognome del donatore non sia vuoto
+    if donazione['cognome_donatore'] == '':
+        flash('Il cognome del donatore non può essere vuoto', 'danger')
+        app.logger.error('Il cognome del donatore non può essere vuoto')
+        return redirect(url_for('singola_raccolta', id=donazione['id_raccolta']))
+    
     # controlla che l'importo della donazione sia maggiore dell'importo minimo previsto
     if int(donazione['importo']) < int(donazione['importo_minimo_raccolta']):
         app.logger.error('L\' importo della donazione è minore di quello minimo previsto dalla raccolta!')
@@ -358,9 +369,9 @@ def new_donazione():
     # controlla se l'utente è anonimo, in caso il campo "donatore" diventa None
     tipo_donatore = donazione.get('utente_anonimo', 'off')  # 'off' as default if not present
     if tipo_donatore == 'on':
-        donazione['donatore'] = None
-    else:
-        donazione['donatore'] = current_user.id_utente
+        donazione['id_donatore'] = None
+        donazione['nome_donatore'] = None
+        donazione['cognome_donatore'] = None
     
     # aggiungi la data di oggi
     # Get the current date and time

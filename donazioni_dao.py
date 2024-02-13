@@ -13,13 +13,15 @@ def add_donazione(donazione):
 
     x = datetime.datetime.now()
 
-    sql = 'INSERT INTO donazioni(importo,donatore,raccolta,testo_donazione,data_donazione) VALUES(?,?,?,?,?)'
+    sql = 'INSERT INTO donazioni(importo,id_donatore,raccolta,testo_donazione,data_donazione,nome_donatore,cognome_donatore) VALUES(?,?,?,?,?,?,?)'
     cursor.execute(sql, (
                         donazione['importo'],
-                        donazione['donatore'],
+                        donazione['id_donatore'],
                         donazione['id_raccolta'],
                         donazione['testo_donazione'],
-                        donazione['data_donazione']))
+                        donazione['data_donazione'],
+                        donazione['nome_donatore'],
+                        donazione['cognome_donatore']))
     
     # Aggiorna cifra_attuale nella tabella raccolta
     sql_update_cifra_attuale = 'UPDATE raccolte SET cifra_attuale = cifra_attuale + ? WHERE id_raccolta = ?'
@@ -47,7 +49,7 @@ def get_donazione_by_id(id):
     '''ricevi l'id della raccolta, seleziona tutte le donazioni effettuate a quella raccolta, ovvero
     dove raccolta (donazioni) = id_raccolta (raccolte)'''
 
-    sql = 'SELECT donazioni.id_donazione,donazioni.importo,donazioni.donatore,donazioni.raccolta,donazioni.testo_donazione,donazioni.data_donazione,utenti.nome,utenti.cognome FROM donazioni LEFT JOIN utenti ON donazioni.donatore = utenti.id_utente WHERE donazioni.raccolta = ? ORDER BY data_donazione DESC'
+    sql = 'SELECT donazioni.id_donazione,donazioni.importo,donazioni.id_donatore,donazioni.raccolta,donazioni.testo_donazione,donazioni.data_donazione,donazioni.nome_donatore,donazioni.cognome_donatore FROM donazioni WHERE donazioni.raccolta = ? ORDER BY data_donazione DESC'
     cursor.execute(sql, (id,))
     donazioni = cursor.fetchall()
 

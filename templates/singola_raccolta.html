@@ -15,7 +15,9 @@
         <div class="card mb-3">
           <div class="row g-0"> <!-- g-0 rimuove il gutter (spazio) tra le colonne -->
             <div class="col-md-4"> <!-- Assegna 4 colonne all'immagine -->
+              {% if raccolta.immagine %}
               <img src="{{ url_for('static', filename=raccolta.immagine) }}" class="img-fluid rounded-start" alt="Questa è l'immagine della raccolta: {{raccolta.nome_raccolta}}">
+              {% endif %}
             </div>
             <div class="col-md-8"> <!-- Assegna 8 colonne al contenuto, affinché occupino lo spazio a destra dell'immagine -->
               <div class="card-body">
@@ -35,7 +37,7 @@
 </main>
 
             
-            {% if current_user.is_authenticated and raccolta.status == "attiva" %}
+            {% if raccolta.status == "attiva" %}
 
             <!--Pulsante per effettuare una donazione, dedve comparire solo per le raccolte attive-->
 
@@ -51,6 +53,24 @@
                     </div>
                     <form action="/donazioni/new" method="POST" enctype="multipart/form-data" class="p-3">
                       <div class="modal-body">
+                        <!--Se l'utente non è autenticato allora bisogna richiedergli anche nome e cognome
+                        affinchè compaiano nella donazione, altrimenti si prendono nome e cognome del current user-->
+                        {% if not current_user.is_authenticated %}
+                        <div class="mb-3">
+                          <label for="nomeInput" class="form-label">Nome</label>
+                          <input type="text" class="form-control" id="nomeInput" name="nome_donatore" placeholder="Nome donatore">
+                        </div>
+                        <div class="mb-3">
+                          <label for="cognomeInput" class="form-label">Cognome</label>
+                          <input type="text" class="form-control" id="cognomeInput" name="cognome_donatore" placeholder="Cognome donatore">
+                        </div>
+                        <!--Quando l'utente non è autenticato, il suo id utente è NULL-->
+                        <input type="hidden" name="id_donatore" value="NULL">
+                        {% else %}
+                          <input type="hidden" name="nome_donatore" value="{{ current_user.nome }}">
+                          <input type="hidden" name="cognome_donatore" value="{{ current_user.cognome }}">
+                          <input type="hidden" name="id_donatore" value="{{current_user.id_utente}}">
+                        {% endif %}
                         <div class="mb-3">
                           <label for="donazioneTextArea" class="form-label">Vuoi aggiungere un messaggio?</label>
                           <textarea class="form-control" id="donazioneTextArea" name="testo_donazione" rows="3"
@@ -89,9 +109,9 @@
                         <button type="submit" class="btn btn-primary">Effettua donazione</button>
                       </div>
                       <!--fornisci al form delle informazioni extra per la validazione-->
-                      <input type="number" name="id_raccolta" value="{{ raccolta.id_raccolta }}" hidden>
-                      <input type="number" name="importo_minimo_raccolta" value="{{ raccolta.importo_minimo}}" hidden>
-                      <input type="number" name="importo_massimo_raccolta" value="{{ raccolta.importo_massimo }}" hidden>
+                      <input type="hidden" name="id_raccolta" value="{{ raccolta.id_raccolta }}" hidden>
+                      <input type="hidden" name="importo_minimo_raccolta" value="{{ raccolta.importo_minimo}}" hidden>
+                      <input type="hidden" name="importo_massimo_raccolta" value="{{ raccolta.importo_massimo }}" hidden>
                     </form>
                   </div>
                 </div>
@@ -101,7 +121,6 @@
 
               <main class="col-lg-9">
                 <h3>Donazioni:</h3>
-                {% if current_user.is_authenticated%}
                 {% for donazione in donazioni %}
                 <div class="card mb-3" style="max-width: 540px;">
                   <div class="row g-0">
@@ -111,7 +130,7 @@
                           <!--se l'utente non è anonimo mostra nome e cognome-->
                           Donatore: 
                           {% if donazione.donatore != None %}
-                          {{donazione.nome | e}} {{donazione.cognome | e}}
+                          {{donazione.nome_donatore | e}} {{donazione.cognome_donatore | e}}
                           {% else %}
                           anonimo
                           {% endif %}
@@ -128,12 +147,6 @@
                 </div>
                 
                 {% endfor %}
-
-            {% else %}
-            <div class="alert alert-primary" role="alert">
-                Devi essere autenticato per effettuare e visualizzare donazioni 
-            </div>
-            {% endif %}
 
         </div>
     </div>
