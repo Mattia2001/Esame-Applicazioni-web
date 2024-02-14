@@ -10,30 +10,46 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
 
 {% block content %}
 
+<!--Aside con l'immagine dell'utente e il suo portafolgio-->
 
-<h2>Il mio portafoglio: {{ current_user.portafoglio }} € raccolti.</h2>
+<div class="container">
+    <div class="row">
+        <!-- Aside section -->
+        <div class="col-lg-3">
+            <aside id="myaside">
+                <div class="card" style="width: 18rem;">
+                    {% if current_user.immagine_utente %}
+                    <img src="{{ url_for('static', filename=current_user.immagine_utente) }}" class="card-img-top" alt="Immagine dell'utente">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='no_immagine_utente.jpg') }}" class="card-img-top" alt="Immagine di default dell'utente">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ current_user.nome }} {{ current_user.cognome }}</h5>
+                        <h5 class="card-title"><i class="bi bi-wallet2"></i> Il mio portafoglio</h5>
+                        <p class="card-text">Hai raccolto <strong>{{ current_user.portafoglio }} €</strong> in donazioni.</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+ 
 
-<main class="col-lg-9 col-md-12">
-    <div class="container">
-        <div class="row">
-            <div class="col-3">
-                <!-- 3 colonne lasciate vuote a sinistra, si potrebbe aggiungere una sidebar con
-                i dati dell'utente che ha eseguito l'accesso-->
-            </div>
 
+<main class="col-lg-9">
             <div class="col-9">
                 <!--Le raccolte in corso sono modificabili attraverso un apposito pulsante
                 oppure cancellabili attraverso un altro pulsante ancora-->
                 <h2>Le tue raccolte in corso:</h2>
                 {% for raccolta in raccolte_utente %}
                     {% if raccolta.status == "attiva" %}
-                        <div class="card mb-3" style="max-width: 540px;">
+                        <div class="card mb-4 fixed-height-card" >
                             <div class="row g-0">
-                                {% if raccolta.immagine %}
-                                    <div class="col-md-4">
+                                    <div class="col-md-4 card-img-container">
+                                    {% if raccolta.immagine %}
                                         <img src="{{ url_for('static', filename=raccolta.immagine) }}" class="img-fluid rounded-start" alt="Questa è l'immagine della raccolta {{ raccolta.nome_raccolta | e }}">
+                                    {% else %}
+                                    <img src="{{ url_for('static', filename='no_immagine_raccolta.jpg') }}" class="img-fluid rounded-start" alt="La raccolta {{ raccolta.nome_raccolta | e }} non ha immagine">
+                                    {% endif %}
                                     </div>
-                                {% endif %}
                                 <div class="col-md-8">
                                     <div class="card-body">
                                         <h5 class="card-title">
@@ -52,117 +68,129 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                                             <p class="card-text"><small class="text-muted">Termina il: {{ raccolta.data_termine }}</small></p>
                                         {% endif %}
 
-<!-- Pulsante Modifica, tutti i campi sono pre-popolati con i dati già esistenti relativi alla raccolta-->
-<button type="button"  data-bs-toggle="modal" data-bs-target="#createModal">
-    Modifica
-  </button>
-    <div class="modal fade" id="createModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5">Modifica la raccolta fondi "{{raccolta.nome_raccolta}}"</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{url_for('modifica_raccolta', id_raccolta=raccolta.id_raccolta) }}" method="POST" enctype="multipart/form-data">
-                <div class="modal-body">
-                <div class="mb-3">
-                    <label for="nuovotitoloInput" class="form-label">Nuovo titolo</label>
-                    <input type="text" class="form-control" id="nuovotitoloInput" name="nuovo_titolo_raccolta" value="{{ raccolta.nome_raccolta }}" required>
-                </div>
-                <div class="mb-3">
-                    <label for="nuovodescrizioneTextArea" class="form-label">Nuova descrizione</label>
-                    <textarea class="form-control" id="nuovodescrizioneTextArea" name="nuova_descrizione" rows="3"
-                    placeholder="Inserisci una nuova descrizione per la tua raccolta fondi" required minlength="30">{{ raccolta.descrizione }}</textarea>
-                </div>
-                <div class="mb-3">
-                    <label for="nuovoimageFile" class="form-label">Aggiungi una nuova immagine, se vuoi</label>
-                    <input class="form-control" name="nuova_immagine_raccolta" type="file" id="nuovoimageFile" value="{{ raccolta.immagine }}">
-                </div>
-                <div class="input-group mb-3">
-                    <label for="nuovo_cifra_da_raggiungereInput" class="form-label mb-2">Nuova cifra da raggiungere</label>
-                    <span class="input-group-text">€</span>
-                    <input type="text" class="form-control" id="nuovo_cifra_da_raggiungereInput" name="nuova_cifra_da_raggiungere" aria-label="Cifra da raggiungere" value="{{ raccolta.cifra_da_raggiungere }}" required>
-                </div>
-                <div class="input-group mb-3">
-                    <label for="nuovo_importo_minimoInput" class="form-label mb-2">Nuovo importo minimo</label>
-                    <span class="input-group-text">€</span>
-                    <input type="text" class="form-control" id="nuovo_importo_minimoInput" name="nuovo_importo_minimo" aria-label="Importo minimo" value="{{ raccolta.importo_minimo}}" required>
-                </div>
-                <div class="input-group mb-3">
-                    <label for="nuovo_importo_massimoInput" class="form-label mb-2">Nuovo importo massimo</label>
-                    <span class="input-group-text">€</span>
-                    <input type="text" class="form-control" id="nuovo_importo_massimoInput" name="nuovo_importo_massimo" aria-label="Importo massimo" value="{{ raccolta.importo_massimo }}" required>
-                </div>
-                <input type="number" name="id_raccolta" value="{{ raccolta.id_raccolta }}" hidden>
-                </div>
-                <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
-                <button type="submit" class="btn btn-primary">Modifica</button>
-                </div>
-            </form>
-            </div>
-        </div>
-    </div>                  
-
-                                        
-<!-- Pulsante Cancella -->
-<form action="{{ url_for('cancella_raccolta', id_raccolta=raccolta.id_raccolta) }}" method="POST" onsubmit="return confirm('Sei sicuro di voler cancellare questa raccolta?');">
-    <input type="hidden" name="id_raccolta" value="{{ raccolta.id_raccolta }}">
-    <button type="submit" class="btn btn-danger">Cancella</button>
-</form>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% endif %}
-{% endfor %}
-<!--Qui finiscono le raccolte attive (che si devono poter modificare)
-Iniziano quelle terminate e non più modificabili-->
-
-                <h2>Le tue raccolte terminate:</h2>
-                {% for raccolta in raccolte_utente %}
-                    {% if raccolta.status == "terminata" %}
-                        <div class="card mb-3" style="max-width: 540px;">
-                            <div class="row g-0">
-                                {% if raccolta.immagine %}
-                                    <div class="col-md-4">
-                                        <img src="{{ url_for('static', filename=raccolta.immagine) }}" class="img-fluid rounded-start" alt="Questa è l'immagine della raccolta {{ raccolta.nome_raccolta | e }}">
-                                    </div>
-                                {% endif %}
-                                <div class="col-md-8">
-                                    <div class="card-body">
-                                        <h5 class="card-title">
-                                            {{ raccolta.nome_raccolta | e }}
-                                            - {% if raccolta.tipo_raccolta == 'lampo' %} Lampo
-                                            {% else %} Normale
-                                            {% endif %}
-                                        </h5>
-                                        <p class="card-text">{{ raccolta.descrizione }}</p>
-                                        <p class="card-text">Totale raccolto: {{ raccolta.cifra_attuale }}€ / {{ raccolta.cifra_da_raggiungere }} €</p>
-                                        {% if raccolta.cifra_attuale >= raccolta.cifra_da_raggiungere %}
-                                        <h5 class="raccolte_terminate_successo">Raccolta andata a buon fine</h5>
-                                         {%  else %}
-                                        <h5 class="raccolte_terminate_fallita">La raccolta non ha raggiunto l'obiettivo</h5>
-                                        {% endif %}
-                                        {% if raccolta.tipo_raccolta == 'lampo' %}
-                                            <p class="card-text"><small class="text-muted">Raccolta creata alle ore: {{ raccolta.data_creazione.split(' ')[1] }}</small></p>
-                                            <p class="card-text"><small class="text-muted">Termina alle ore: {{ raccolta.data_termine.split(' ')[1] }}</small></p>
-                                        {% else %}
-                                            <p class="card-text"><small class="text-muted">Raccolta creata il: {{ raccolta.data_creazione }}</small></p>
-                                            <p class="card-text"><small class="text-muted">Termina il: {{ raccolta.data_termine }}</small></p>
-                                        {% endif %}
+                            <!-- Pulsante Modifica, tutti i campi sono pre-popolati con i dati già esistenti relativi alla raccolta-->
+                            <div class="d-flex justify-content-start">
+                                <!-- Pulsante Modifica con Modal -->
+                                <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#createModal">
+                                    Modifica
+                                </button>
+                                        <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="createModalLabel">Modifica la raccolta fondi "{{ raccolta.nome_raccolta }}"</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <form action="{{ url_for('modifica_raccolta', id_raccolta=raccolta.id_raccolta) }}" method="POST" enctype="multipart/form-data">
+                                                        <div class="modal-body">
+                                                            <div class="mb-3 py-2">
+                                                                <label for="nuovotitoloInput" class="form-label">Nuovo titolo</label>
+                                                                <input type="text" class="form-control" id="nuovotitoloInput" name="nuovo_titolo_raccolta" value="{{ raccolta.nome_raccolta }}" required>
+                                                            </div>
+                                                            <div class="mb-3 py-2">
+                                                                <label for="nuovodescrizioneTextArea" class="form-label">Nuova descrizione</label>
+                                                                <textarea class="form-control" id="nuovodescrizioneTextArea" name="nuova_descrizione" rows="3" required minlength="30">{{ raccolta.descrizione }}</textarea>
+                                                            </div>
+                                                            <div class="mb-3 py-2">
+                                                                <label for="nuovoimageFile" class="form-label">Aggiungi una nuova immagine, se vuoi</label>
+                                                                <input class="form-control" name="nuova_immagine_raccolta" type="file" id="nuovoimageFile">
+                                                            </div>
+                                                            <div class="mb-3 py-2">
+                                                                <label for="nuovo_cifra_da_raggiungereInput" class="form-label">Nuova cifra da raggiungere</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text">€</span>
+                                                                    <input type="text" class="form-control" id="nuovo_cifra_da_raggiungereInput" name="nuova_cifra_da_raggiungere" value="{{ raccolta.cifra_da_raggiungere }}" required>
+                                                                </div>
+                                                            </div>
+                                                            <div class="mb-3 py-2">
+                                                                <label for="nuovo_importo_minimoInput" class="form-label">Nuovo importo minimo</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text">€</span>
+                                                                    <input type="text" class="form-control" id="nuovo_importo_minimoInput" name="nuovo_importo_minimo" value="{{ raccolta.importo_minimo }}" required>
+                                                                </div>
+                                                            </div>
+                                                            <div class="mb-3 py-2">
+                                                                <label for="nuovo_importo_massimoInput" class="form-label">Nuovo importo massimo</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text">€</span>
+                                                                    <input type="text" class="form-control" id="nuovo_importo_massimoInput" name="nuovo_importo_massimo" value="{{ raccolta.importo_massimo }}" required>
+                                                                </div>
+                                                            </div>
+                                                            <input type="hidden" name="id_raccolta" value="{{ raccolta.id_raccolta }}">
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+                                                            <button type="submit" class="btn btn-primary">Modifica</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                                  
+                                        <!-- Pulsante Cancella -->
+                                        <form action="{{ url_for('cancella_raccolta', id_raccolta=raccolta.id_raccolta) }}" method="POST" onsubmit="return confirm('Sei sicuro di voler cancellare questa raccolta?');">
+                                            <input type="hidden" name="id_raccolta" value="{{ raccolta.id_raccolta }}">
+                                            <button type="submit" class="btn btn-danger">Cancella</button>
+                                        </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    {% endif %}
-                {% endfor %}
+                        {% endif %}
+                    {% endfor %}
 
-                
+                        <!--Qui finiscono le raccolte attive (che si devono poter modificare)
+                        Iniziano quelle terminate e non più modificabili-->
+
+                        <h2>Le tue raccolte terminate:</h2>
+                        {% for raccolta in raccolte_utente %}
+                            {% if raccolta.status == "terminata" %}
+                                <div class="card mb-4 fixed-height-card">
+                                    <div class="row g-0">
+                                            <div class="col-md-4 card-img-container">
+                                                {% if raccolta.immagine %}
+                                                <img src="{{ url_for('static', filename=raccolta.immagine) }}" class="img-fluid rounded-start" alt="Questa è l'immagine della raccolta {{ raccolta.nome_raccolta | e }}">
+                                                {% else %}
+                                                <img src="{{ url_for('static', filename='no_immagine_raccolta.jpg') }}" class="img-fluid rounded-start" alt="Questa è l'immagine della raccolta {{ raccolta.nome_raccolta | e }}">
+                                                {% endif %}
+                                            </div>
+                                        <div class="col-md-8">
+                                            <div class="card-body">
+                                                <h5 class="card-title">
+                                                    {{ raccolta.nome_raccolta | e }}
+                                                    - {% if raccolta.tipo_raccolta == 'lampo' %} Lampo
+                                                    {% else %} Normale
+                                                    {% endif %}
+                                                </h5>
+                                                <p class="card-text">{{ raccolta.descrizione }}</p>
+                                                <p class="card-text">Totale raccolto: {{ raccolta.cifra_attuale }}€ / {{ raccolta.cifra_da_raggiungere }} €</p>
+                                                <div class="d-flex align-items-center">
+                                                {% if raccolta.cifra_attuale >= raccolta.cifra_da_raggiungere %}
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="green" class="bi bi-check-square-fill me-2" viewBox="0 0 16 16">
+                                                        <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm10.03 4.97a.75.75 0 0 1 .011 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.75.75 0 0 1 1.08-.022z"/>
+                                                    </svg>
+                                                    <h5 class="raccolte_terminate_successo mb-0">Obiettivo raggiunto</h5>
+                                                    {%  else %}
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="red" class="bi bi-x-square-fill me-2" viewBox="0 0 16 16">
+                                                        <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm3.354 4.646L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708"/>
+                                                    </svg>
+                                                    <h5 class="raccolte_terminate_fallita mb-0">Obiettivo non raggiunto</h5>
+                                                {% endif %}
+                                                </div>
+                                                <p class="card-text"><small class="text-muted">Raccolta creata il: {{ raccolta.data_creazione }}</small></p>
+                                                <p class="card-text"><small class="text-muted">Terminata il: {{ raccolta.data_termine }}</small></p> 
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
-        </div>
+        </main>
     </div>
-</main>
+</div>
 
 {% endblock %}

@@ -200,6 +200,9 @@ def nuova_raccolta():
             
     raccolta = request.form.to_dict()
 
+    # Get the current date and time
+    now = datetime.now()
+
     if raccolta['titolo_raccolta'] == '':
         flash('Il titolo non può essere vuoto', 'danger')
         app.logger.error('Il titolo non può essere vuoto')
@@ -229,9 +232,16 @@ def nuova_raccolta():
         app.logger.error('L\' importo massimo non può essere vuoto!')
         return redirect(url_for('home'))
     
-    # il tipo di raccolta: lampo o normale
-    
+    #raccolta['data_termine'] = raccolta['data_termine'].strftime("%Y-%m-%d")
     tipo_raccolta = raccolta.get('tipo_raccolta', 'off')  # 'off' as default if not present
+
+    # se la raccolta dura più di 14 giorni segnalare l'errore
+    if raccolta['data_termine'] > (now + timedelta(days=14)).strftime("%Y-%m-%d") and not (tipo_raccolta == 'on'):
+        flash('La raccolta non può durare più di 14 giorni', 'danger')
+        app.logger.error('La raccolta non può durare più di 14 giorni')
+        return redirect(url_for('home'))
+    
+    # il tipo di raccolta: lampo o normale
     if tipo_raccolta == 'on':
         raccolta['tipo_raccolta'] = 'lampo'
     else:
@@ -240,9 +250,6 @@ def nuova_raccolta():
     # esegui un print dei dati ricevuti dal form
     print("")
     print(raccolta)
-
-    # Get the current date and time
-    now = datetime.now()
 
     # data di creazione della raccolta
     raccolta['data_creazione'] = now.strftime("%Y-%m-%d %H:%M")
@@ -260,7 +267,6 @@ def nuova_raccolta():
         raccolta['data_termine'] = (now + timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M")
         print("La raccolta è di tipo lampo")
     else:
-        raccolta['data_termine'] =  (now + timedelta(days=14)).strftime("%Y-%m-%d %H:%M")
         print("La raccolta è di tipo normale")
 
     # alla sua creazione, la cifra raggiunta della raccolta è zero
@@ -326,7 +332,7 @@ def singola_raccolta(id):
 
     # estrai i dati della raccolta selezionata
     raccolta_db = raccolte_dao.get_raccolta_by_id(id)
-
+    
     # estrai le donazioni effettuate alla raccolta selezionata per mostrarle nella pagina singola raccolta
     donazioni_db = donazioni_dao.get_donazione_by_id(id)
 

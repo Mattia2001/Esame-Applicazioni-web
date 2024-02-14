@@ -43,7 +43,7 @@
                 @{{current_user.nome}} {{current_user.cognome}}
               </a>
               <ul class="dropdown-menu dropdown-menu-dark">
-                <li><a class="dropdown-item" href="{{ url_for('le_mie_raccolte') }}">Le mie raccolte</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('le_mie_raccolte') }}">Il mio profilo</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('logout') }}">Esci</a></li>
               </ul>
             </li>
@@ -65,10 +65,6 @@
       {%block content %}{% endblock %}
     </div>
   </div>
-
-   <!-- A sinistra del contenuto della pagina si potrebbe inserire una sidebar che permetta di selezionare
-    una specifica categoria da visualizzare. Questo non mi sembra richiesto dalle istruzioni ma al costo di una
-    colonna aggiuntiva nel database si potrebbe introdurre una funzionalità utile ai fini della navigazione -->
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"

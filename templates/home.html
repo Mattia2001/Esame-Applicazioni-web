@@ -1,14 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Home{% endblock %}
+{% block title %}Raccolte terminate{% endblock %}
 {% block home_active %}active{% endblock %}
-{% block page_name%}Home{%endblock%}
-
-<!--Nella home si devono visualizzare tutte le raccolte fondi attualmente attive, mostrando prima quelle che sono
-prossime alla scadenza -->
+{% block page_name %}Raccolte terminate{% endblock %}
 
 {% block content %}
-
-<!--errori di login devono essere visualizzati sotto la navbar-->
 
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
@@ -20,155 +15,151 @@ prossime alla scadenza -->
   {% endif %}
 {% endwith %}
 
-<aside id="myaside" class="col-lg-3">
-    {% if not current_user.is_authenticated %}
-    <section>
-      <h3>Login</h3>
-      <div class="bg-light p-4 border rounded mb-3">
-        <form action="/login" method="POST">
-          <div class="mb-3">
-            <label for="nicknameInput" class="form-label">email</label>
-            <input type="text" class="form-control" id="emailInput" aria-describedby="nicknameHelp" name="email">
-            <div id="emailHelp" class="form-text">Non condivideremo mai la tua email con nessun altro.</div>
-          </div>
-          <div class="mb-3">
-            <label for="passwordInput" class="form-label">Password</label>
-            <input type="password" class="form-control" id="passwordInput" name="password">
-          </div>
-          <small>Non hai ancora un account? <a href="/iscriviti">Registrati</a></small>
-          <button type="submit" class="btn btn-primary mt-3">Accedi</button>
-        </form>
-      </div>
-    </section>
-    {% else %}
-    <div class="container d-flex justify-content-center align-items-center">
-      <div class="row">
-          <div class="col-3">
-      <div class="card" style="width: 18rem;">
-        {% if current_user.immagine_utente%}
-          <img src="{{ url_for('static', filename= current_user.immagine_utente) }}" class="card-img-top" alt="immagine dell'utente">
-        {% else%}
-        <img src="{{ url_for('static', filename= 'user.jpg') }}" class="card-img-top" alt="immagine dell'utente">
-        {% endif %}
-          <div class="card-body">
-          <h5 class="card-title">Benvenuto {{current_user.nome}} {{current_user.cognome}}</h5>
-          </div>
-      </div>
-      </div>
-      </div>  
-  </div>
-
-    {% endif %}
-  </aside>
-
-  <!--Nel main l'utente deve visualizzare tutte le raccolte fondi momentaneamente attive, partendo da quelle più
-  vicine alla scadenza. Ad ogni raccolta è associata una card orizzontale con le informazioni riguardanti la raccolta
-  tranne il pulsante per donare che può essere visto solo nella pagina della singola raccolta dagli utenti loggati-->
-
-  <main class="col-lg-9 col-md-12">
-    {% for raccolta in raccolte %}
-    <!--bisogna visualizzare solo le raccolte ancora valide-->
-    {% if raccolta.status == 'attiva' %}
-
-    <div class="card mb-3" style="max-width: 540px;">
-      <div class="row g-0">
-        <div class="col-md-4">
-          {% if raccolta.immagine %}
-          <a href="{{ url_for('singola_raccolta', id=raccolta.id_raccolta) }}">
-            <img class="w-100 p-2" src="{{ url_for('static', filename=raccolta.immagine) }}" 
-            alt="Questa è l'immagine della raccolta {{raccolta.nome_raccolta | e}}">
-          </a>
-        {% endif %}
-      </div>
-        <div class="col-12">
-          <div class="card-body">
-            <h5 class="card-title"> 
-                 <a href="{{url_for('singola_raccolta', id=raccolta.id_raccolta)}}">{{raccolta.nome_raccolta | e}}</a>  
-              - {% if raccolta.tipo_raccolta == 'lampo' %} Lampo
-              {%else%} Normale
-              {%endif%}
-            </h5>
-            <p class="card-text">{{raccolta.descrizione}}</p>
-            <p class="card-text">Totale raccolto: {{raccolta.cifra_attuale}}€ / {{raccolta.cifra_da_raggiungere}} €</p>
-            <!--Se la raccolta è di tipo lampo, mostra solo ora e minuto, non tutta la data.
-            Quindi usiamo il filtro Jinja split()-->
-            {% if raccolta.tipo_raccolta == 'lampo' %}
-            <p class="card-text"><small class="text-body-secondary">Raccolta creata alle ore: {{raccolta.data_creazione.split(' ')[1]}}</small></p>
-            <p class="card-text"><small class="text-body-secondary">Termina alle ore: {{raccolta.data_termine.split(' ')[1]}}</small></p>
-            <p class="card-text"><small class="text-body-secondary">Mancano {{raccolta.data_termine.split(' ')[1] - raccolta.data_creazione.split(' ')[1]}} minuti al termine.</small></p>
-            {% else %}
-            <p class="card-text"><small class="text-body-secondary">Raccolta creata il: {{raccolta.data_creazione}}</small></p>
-            <p class="card-text"><small class="text-body-secondary">Termina il: {{raccolta.data_termine}}</small></p>
-            {% endif %}
-          </div>
+<div class="container">
+    <div class="row">
+        <!-- Aside per l'utente o il form di login -->
+        <div class="col-lg-3">
+            <aside id="myaside">
+                {% if not current_user.is_authenticated %}
+                <section>
+                    <h3>Login</h3>
+                    <div class="bg-light p-4 border rounded mb-3">
+                        <form action="/login" method="POST">
+                            <div class="mb-3">
+                                <label for="emailInput" class="form-label">Email</label>
+                                <input type="text" class="form-control" id="emailInput" name="email">
+                                <div id="emailHelp" class="form-text">Non condivideremo mai la tua email con nessun altro.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="passwordInput" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="passwordInput" name="password">
+                            </div>
+                            <small>Non hai ancora un account? <a href="/iscriviti">Registrati</a></small>
+                            <button type="submit" class="btn btn-primary mt-3">Accedi</button>
+                        </form>
+                    </div>
+                </section>
+                {% else %}
+                <div class="card" style="width: 18rem;">
+                    {% if current_user.immagine_utente %}
+                    <img src="{{ url_for('static', filename=current_user.immagine_utente) }}" class="card-img-top" alt="Immagine dell'utente">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='user.jpg') }}" class="card-img-top" alt="Immagine dell'utente">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ current_user.nome }} {{ current_user.cognome }}</h5>
+                    </div>
+                </div>
+                {% endif %}
+            </aside>
         </div>
-      </div>
+
+        <div class="col-lg-9">
+          <div class="container mt-4">
+              {% for raccolta in raccolte %}
+              {% if raccolta.status == 'attiva' %}
+              <div class="card mb-4 fixed-height-card">
+                  <div class="row g-0">
+                      <div class="col-md-4 card-img-container">
+                          {% if raccolta.immagine %}
+                          <a href="{{ url_for('singola_raccolta', id=raccolta.id_raccolta) }}">
+                              <img src="{{ url_for('static', filename=raccolta.immagine) }}" alt="Immagine della raccolta {{ raccolta.nome_raccolta | e }}">
+                          </a>
+                          {% else %}
+                          <a href="{{ url_for('singola_raccolta', id=raccolta.id_raccolta) }}">
+                              <img src="{{ url_for('static', filename='no_immagine_raccolta.jpg') }}" alt="La raccolta {{ raccolta.nome_raccolta | e }} non ha immagine">
+                          </a>
+                          {% endif %}
+                      </div>
+                      <div class="col-md-8">
+                          <div class="card-body d-flex flex-column">
+                              <h5 class="card-title">
+                                  <a href="{{ url_for('singola_raccolta', id=raccolta.id_raccolta) }}">{{ raccolta.nome_raccolta | e }}</a>
+                                  - {% if raccolta.tipo_raccolta == 'lampo' %} Lampo {% else %} Normale {% endif %}
+                              </h5>
+                              <p class="card-text">{{ raccolta.descrizione }}</p>
+                              <p class="card-text">Totale raccolto: {{ raccolta.cifra_attuale }}€ / {{ raccolta.cifra_da_raggiungere }} €</p>
+                              {% if raccolta.tipo_raccolta == 'lampo' %}
+                              <p class="card-text"><small class="text-muted">Raccolta creata alle ore: {{ raccolta.data_creazione.split(' ')[1] }}</small></p>
+                              <p class="card-text"><small class="text-muted">Termina alle ore: {{ raccolta.data_termine.split(' ')[1] }}</small></p>
+                              {% else %}
+                              <p class="card-text"><small class="text-muted">Raccolta creata il: {{ raccolta.data_creazione }}</small></p>
+                              <p class="card-text"><small class="text-muted">Termina il: {{ raccolta.data_termine }}</small></p>
+                              {% endif %}
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              {% endif %}
+              {% endfor %}
+
+                <!-- Pulsante per aggiungere una nuova raccolta fondi -->
+                {% if current_user.is_authenticated %}
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">Aggiungi nuova raccolta</button>
+                <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="createModalLabel">Crea una nuova raccolta fondi</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form action="/raccolte/new" method="POST" enctype="multipart/form-data">
+                              <div class="modal-body">
+                                <div class="mb-3">
+                                  <label for="titoloInput" class="form-label">Titolo</label>
+                                  <input type="text" class="form-control" id="titoloInput" name="titolo_raccolta" required>
+                                </div>
+                                <div class="mb-3">
+                                  <label for="descrizioneTextArea" class="form-label">Descrizione</label>
+                                  <textarea class="form-control" id="descrizioneTextArea" name="descrizione" rows="3"
+                                    placeholder="Inserisci una descrizione per la tua raccolta fondi" required minlength="30"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                  <label for="imageFile" class="form-label">Aggiungi un'immagine, se vuoi</label>
+                                  <input class="form-control" name="immagine_raccolta" type="file" id="imageFile">
+                                </div>
+                                <div class="mb-3">
+                                  <label for="cifra_da_raggiungereInput" class="form-label">Cifra da raggiungere</label>
+                                  <div class="input-group">
+                                    <span class="input-group-text">€</span>
+                                    <input type="text" class="form-control" id="cifra_da_raggiungereInput" name="cifra_da_raggiungere" required>
+                                  </div>
+                                </div>
+                                <div class="mb-3">
+                                  <label for="importo_minimoInput" class="form-label">Importo minimo</label>
+                                  <div class="input-group">
+                                    <span class="input-group-text">€</span>
+                                    <input type="text" class="form-control" id="importo_minimoInput" name="importo_minimo" required>
+                                  </div>
+                                </div>
+                                <div class="mb-3">
+                                  <label for="importo_massimoInput" class="form-label">Importo massimo</label>
+                                  <div class="input-group">
+                                    <span class="input-group-text">€</span>
+                                    <input type="text" class="form-control" id="importo_massimoInput" name="importo_massimo" required>
+                                  </div>
+                                </div>
+                                <div class="col-md-6"> 
+                                  <label for="data_termineInput" class="form-label">Termine raccolta</label>
+                                  <input type="date" class="form-control" id="data_termineInput" name="data_termine" required>
+                                </div>
+                                <div class="mb-3 form-check">
+                                  <label class="form-check-label" for="tipo_raccolta_checkbox">Lampo</label>
+                                  <input type="checkbox" class="form-check-input" id="tipo_raccolta_checkbox" name="tipo_raccolta">
+                                </div>
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+                                <button type="submit" class="btn btn-primary">Crea raccolta</button>
+                              </div>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
-    {% endif %}
-    {% endfor %}
-  </main>
-
-  <!--Pulsante per aggiungere una nuova raccolta fondi-->
-  {% if current_user.is_authenticated %}
-<button type="button" class="mybutton" data-bs-toggle="modal" data-bs-target="#createModal">
-  +
-</button>
-<div class="modal fade" id="createModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5">Crea una nuova raccolta fondi</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form action="/raccolte/new" method="POST" enctype="multipart/form-data" class="p-3">
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="titoloInput" class="form-label">Titolo</label>
-            <input type="text" class="form-control" id="titoloInput" name="titolo_raccolta" required>
-          </div>
-          <div class="mb-3">
-            <label for="descrizioneTextArea" class="form-label">Descrizione</label>
-            <textarea class="form-control" id="descrizioneTextArea" name="descrizione" rows="3"
-              placeholder="Inserisci una descrizione per la tua raccolta fondi" required minlength="30"></textarea>
-          </div>
-          <div class="mb-3">
-            <label for="imageFile" class="form-label">Aggiungi un'immagine, se vuoi</label>
-            <input class="form-control" name="immagine_raccolta" type="file" id="imageFile">
-          </div>
-          <div class="mb-3">
-            <label for="cifra_da_raggiungereInput" class="form-label">Cifra da raggiungere</label>
-            <div class="input-group">
-              <span class="input-group-text">€</span>
-              <input type="text" class="form-control" id="cifra_da_raggiungereInput" name="cifra_da_raggiungere" required>
-            </div>
-          </div>
-          <div class="mb-3">
-            <label for="importo_minimoInput" class="form-label">Importo minimo</label>
-            <div class="input-group">
-              <span class="input-group-text">€</span>
-              <input type="text" class="form-control" id="importo_minimoInput" name="importo_minimo" required>
-            </div>
-          </div>
-          <div class="mb-3">
-            <label for="importo_massimoInput" class="form-label">Importo massimo</label>
-            <div class="input-group">
-              <span class="input-group-text">€</span>
-              <input type="text" class="form-control" id="importo_massimoInput" name="importo_massimo" required>
-            </div>
-          </div>
-          <div class="mb-3 form-check">
-            <label class="form-check-label" for="tipo_raccolta_checkbox">Lampo</label>
-            <input type="checkbox" class="form-check-input" id="tipo_raccolta_checkbox" name="tipo_raccolta">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
-          <button type="submit" class="btn btn-primary">Crea raccolta</button>
-        </div>
-      </form>
-      
-    </div>
-  </div>
 </div>
-{% endif %}
 {% endblock %}

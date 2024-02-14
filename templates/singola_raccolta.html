@@ -10,147 +10,156 @@
 
 <main class="col-lg-12">
   <div class="container">
-    <div class="row">
-      <div class="col-lg-9 offset-lg-3"> <!-- Centra la card nel viewport lasciando spazio a sinistra -->
-        <div class="card mb-3">
-          <div class="row g-0"> <!-- g-0 rimuove il gutter (spazio) tra le colonne -->
-            <div class="col-md-4"> <!-- Assegna 4 colonne all'immagine -->
+    <!-- Raccolta e donazioni nella stessa row per allineamento verticale -->
+    <div class="row justify-content-center">
+      <div class="col-lg-9">
+        <!-- Card della raccolta -->
+        <div class="card mb-4">
+          <div class="row g-0">
+            <!-- Colonna per l'immagine della raccolta -->
+            <div class="col-md-4 d-flex align-items-stretch"> <!-- Usa d-flex e align-items-stretch per estendere l'immagine verticalmente -->
               {% if raccolta.immagine %}
-              <img src="{{ url_for('static', filename=raccolta.immagine) }}" class="img-fluid rounded-start" alt="Questa è l'immagine della raccolta: {{raccolta.nome_raccolta}}">
+              <img src="{{ url_for('static', filename=raccolta.immagine) }}" class="img-fluid w-100 img-full-height" alt="Immagine della raccolta: {{raccolta.nome_raccolta}}">
+              {% else %}
+              <img src="{{ url_for('static', filename='no_immagine_raccolta.jpg') }}" class="img-fluid w-100 img-full-height" alt="Nessuna immagine disponibile">
               {% endif %}
-            </div>
+            </div>           
             <div class="col-md-8"> <!-- Assegna 8 colonne al contenuto, affinché occupino lo spazio a destra dell'immagine -->
-              <div class="card-body">
-                <h5 class="card-title">{{raccolta.nome_raccolta | e}}</h5>
-                <p>Autore della raccolta: {{raccolta.nome}} {{raccolta.cognome}}</p>
+              <div class="card-body d-flex flex-column justify-content-between"> <!-- Usa flex-column e justify-content-between per distribuire lo spazio -->
+                <div class="d-flex align-items-center mb-3"> <!-- Usa d-flex e align-items-center per allineare l'immagine di profilo e nome dell'utente -->
+                  <!-- Immagine di profilo -->
+                  {% if raccolta.immagine_utente %}
+                  <img src="{{ url_for('static', filename=raccolta.immagine_utente) }}" class="profile-image me-2" alt="Immagine di profilo">
+                  {% else %}
+                  <img src="{{ url_for('static', filename='no_immagine_utente.jpg') }}" class="profile-image me-2" alt="Immagine di profilo">
+                  {% endif %}
+                  <p>{{raccolta.nome}} {{raccolta.cognome}}</p>
+                </div>
+                <h5 class="card-title mb-0">{{raccolta.nome_raccolta | e}}</h5>
                 <p class="card-text">{{raccolta.descrizione | e}}</p>
                 <p>Raccolte iniziata il: {{raccolta.data_creazione | e}} - Termina il: {{raccolta.data_termine | e}}</p>
                 <p>Totale raccolto: {{raccolta.cifra_attuale | e}} € / {{raccolta.cifra_da_raggiungere | e}} €</p>
                 <p>Importo minimo donazione: {{raccolta.importo_minimo | int}}€ - Importo massimo donazione: {{raccolta.importo_massimo | int}}€</p>
+                {% if raccolta.status == "attiva" %}
+                <button type="button" class="btn btn-primary rounded-3" data-bs-toggle="modal" data-bs-target="#createModal">
+                  Dona!
+                </button>
+                {% endif %}
               </div>
             </div>
           </div>
         </div>
+        
+        <!-- Sezione Donazioni -->
+        <h3>Donazioni:</h3>
+        {% for donazione in donazioni %}
+        <div class="card mb-3">
+          <div class="row g-0">
+            <div class="col-lg-6">
+              <div class="card-body">
+                <h5 class="card-title">Donatore: {% if donazione.donatore != None %}{{ donazione.nome_donatore | e }} {{ donazione.cognome_donatore | e }}{% else %}Anonimo{% endif %}</h5>
+                <p class="card-text">{{ donazione.testo_donazione }}</p>
+                <p class="card-text">Importo donazione: {{ donazione.importo | e }} €</p>
+                <p class="card-text">Data donazione: {{ donazione.data_donazione | e }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
       </div>
     </div>
   </div>
 </main>
 
-            
-            {% if raccolta.status == "attiva" %}
-
-            <!--Pulsante per effettuare una donazione, dedve comparire solo per le raccolte attive-->
-
-            <button type="button" class="mybutton" data-bs-toggle="modal" data-bs-target="#createModal">
-                +
-              </button>
-              <div class="modal fade" id="createModal" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h1 class="modal-title fs-5">Effettua una donazione</h1>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <form action="/donazioni/new" method="POST" enctype="multipart/form-data" class="p-3">
-                      <div class="modal-body">
-                        <!--Se l'utente non è autenticato allora bisogna richiedergli anche nome e cognome
-                        affinchè compaiano nella donazione, altrimenti si prendono nome e cognome del current user-->
-                        {% if not current_user.is_authenticated %}
-                        <div class="mb-3">
-                          <label for="nomeInput" class="form-label">Nome</label>
-                          <input type="text" class="form-control" id="nomeInput" name="nome_donatore" placeholder="Nome donatore">
-                        </div>
-                        <div class="mb-3">
-                          <label for="cognomeInput" class="form-label">Cognome</label>
-                          <input type="text" class="form-control" id="cognomeInput" name="cognome_donatore" placeholder="Cognome donatore">
-                        </div>
-                        <!--Quando l'utente non è autenticato, il suo id utente è NULL-->
-                        <input type="hidden" name="id_donatore" value="NULL">
-                        {% else %}
-                          <input type="hidden" name="nome_donatore" value="{{ current_user.nome }}">
-                          <input type="hidden" name="cognome_donatore" value="{{ current_user.cognome }}">
-                          <input type="hidden" name="id_donatore" value="{{current_user.id_utente}}">
-                        {% endif %}
-                        <div class="mb-3">
-                          <label for="donazioneTextArea" class="form-label">Vuoi aggiungere un messaggio?</label>
-                          <textarea class="form-control" id="donazioneTextArea" name="testo_donazione" rows="3"
-                            placeholder="Inserisci un testo per la tua donazione"></textarea>
-                        </div>
-                        <div class="mb-3">
-                          <label for="importo_donazioneInput" class="form-label">Importo della donazione</label>
-                          <div class="input-group">
-                              <span class="input-group-text">€</span>
-                              <input type="number" class="form-control" id="importo_donazioneInput" name="importo" aria-label="Cifra da raggiungere" min="{{raccolta.importo_minimo|int}}" max="{{raccolta.importo_massimo|int}}" required>
-                          </div>
-                      </div>                      
-                      </div>
-                      <div class="mb-3 form-check">
-                        <label class="form-check-label" for="anonimo_checkbox">Anonimo</label>
-                        <input type="checkbox" class="form-check-input" id="anonimo_checkbox" name="utente_anonimo">
-                      </div>
-                      <h4>Dati pagamento</h4>
-                          <div class="mb-3">
-                              <label for="numeroCartaInput" class="form-label">Numero carta di credito</label>
-                              <input type="text" class="form-control" id="numeroCartaInput" name="numero_carta" placeholder="Numero carta di credito" required pattern="\d{16}">
-                          </div>
-                          <div class="row g-3"> 
-                            <div class="col-md-6"> 
-                                <label for="cvvInput" class="form-label">CVV</label>
-                                <input type="text" class="form-control" id="cvvInput" name="cvv" placeholder="CVV" required pattern="\d{3}">
-                            </div>
-                            <div class="col-md-6"> 
-                                <label for="scadenzaInput" class="form-label">Data di scadenza</label>
-                                <input type="month" class="form-control" id="scadenzaInput" name="data_scadenza" required>
-                            </div>
-                        </div>
-                      
-                      <div class="modal-footer">            
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
-                        <button type="submit" class="btn btn-primary">Effettua donazione</button>
-                      </div>
-                      <!--fornisci al form delle informazioni extra per la validazione-->
-                      <input type="hidden" name="id_raccolta" value="{{ raccolta.id_raccolta }}" hidden>
-                      <input type="hidden" name="importo_minimo_raccolta" value="{{ raccolta.importo_minimo}}" hidden>
-                      <input type="hidden" name="importo_massimo_raccolta" value="{{ raccolta.importo_massimo }}" hidden>
-                    </form>
-                  </div>
-                </div>
+<!--Form per effettuare una donazione, dedve comparire solo per le raccolte attive-->
+<div class="modal fade" id="createModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5">Effettua una donazione</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/donazioni/new" method="POST" enctype="multipart/form-data" class="p-3">
+        <div class="modal-body">
+          <!--Se l'utente non è autenticato allora bisogna richiedergli anche nome e cognome
+          affinchè compaiano nella donazione, altrimenti si prendono nome e cognome del current user-->
+          {% if not current_user.is_authenticated %}
+          <div class="mb-3">
+            <label for="nomeInput" class="form-label">Nome</label>
+            <input type="text" class="form-control" id="nomeInput" name="nome_donatore" placeholder="Nome donatore">
+          </div>
+          <div class="mb-3">
+            <label for="cognomeInput" class="form-label">Cognome</label>
+            <input type="text" class="form-control" id="cognomeInput" name="cognome_donatore" placeholder="Cognome donatore">
+          </div>
+          <!--Quando l'utente non è autenticato, il suo id utente è NULL-->
+          <input type="hidden" name="id_donatore" value="NULL">
+          {% else %}
+            <input type="hidden" name="nome_donatore" value="{{ current_user.nome }}">
+            <input type="hidden" name="cognome_donatore" value="{{ current_user.cognome }}">
+            <input type="hidden" name="id_donatore" value="{{current_user.id_utente}}">
+          {% endif %}
+          <div class="mb-3">
+            <label for="donazioneTextArea" class="form-label">Vuoi aggiungere un messaggio?</label>
+            <textarea class="form-control" id="donazioneTextArea" name="testo_donazione" rows="3"
+              placeholder="Inserisci un testo per la tua donazione"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="importo_donazioneInput" class="form-label">Importo della donazione</label>
+            <div class="input-group">
+                <span class="input-group-text">€</span>
+                <input type="number" class="form-control" id="importo_donazioneInput" name="importo" aria-label="Cifra da raggiungere" min="{{raccolta.importo_minimo|int}}" max="{{raccolta.importo_massimo|int}}" required>
+            </div>
+        </div>                      
+        </div>
+        <div class="mb-3 form-check">
+          <label class="form-check-label" for="anonimo_checkbox">Anonimo</label>
+          <input type="checkbox" class="form-check-input" id="anonimo_checkbox" name="utente_anonimo">
+        </div>
+        <h4>Indirizzo</h4>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label for="viaInput" class="form-label">Via</label>
+                <input type="text" class="form-control" id="viaInput" name="nome_via" placeholder="Via">
+            </div>
+            <div class="col-md-4">
+                <label for="numero_civicoInput" class="form-label">Numero civico</label>
+                <input type="number" class="form-control" id="numero_civicoInput" name="numero_civico" placeholder="Numero civico">
+            </div>
+            <div class="col-md-4">
+                <label for="cittàInput" class="form-label">Città</label>
+                <input type="text" class="form-control" id="cittàInput" name="città" placeholder="Città">
+            </div>
+        </div>
+        <h4>Dati pagamento</h4>
+            <div class="mb-3">
+                <label for="numeroCartaInput" class="form-label">Numero carta di credito</label>
+                <input type="text" class="form-control" id="numeroCartaInput" name="numero_carta" placeholder="Numero carta di credito" required pattern="\d{16}">
+            </div>
+            <div class="row g-3"> 
+              <div class="col-md-6"> 
+                  <label for="cvvInput" class="form-label">CVV</label>
+                  <input type="text" class="form-control" id="cvvInput" name="cvv" placeholder="CVV" required pattern="\d{3}">
               </div>
-              {% endif %}
+              <div class="col-md-6"> 
+                  <label for="scadenzaInput" class="form-label">Data di scadenza</label>
+                  <input type="month" class="form-control" id="scadenzaInput" name="data_scadenza" required>
+              </div>
+          </div>
+        
+        <div class="modal-footer">            
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+          <button type="submit" class="btn btn-primary">Effettua donazione</button>
+        </div>
+        <!--fornisci al form delle informazioni extra per la validazione-->
+        <input type="hidden" name="id_raccolta" value="{{ raccolta.id_raccolta }}" hidden>
+        <input type="hidden" name="importo_minimo_raccolta" value="{{ raccolta.importo_minimo}}" hidden>
+        <input type="hidden" name="importo_massimo_raccolta" value="{{ raccolta.importo_massimo }}" hidden>
+      </form>
+    </div>
+  </div>
+</div>
+              
               <!--Qui verranno visualizzate tutte le varie donazioni-->
 
-              <main class="col-lg-9">
-                <h3>Donazioni:</h3>
-                {% for donazione in donazioni %}
-                <div class="card mb-3" style="max-width: 540px;">
-                  <div class="row g-0">
-                    <div class="col-md-8">
-                      <div class="card-body">
-                        <h5 class="card-title">
-                          <!--se l'utente non è anonimo mostra nome e cognome-->
-                          Donatore: 
-                          {% if donazione.donatore != None %}
-                          {{donazione.nome_donatore | e}} {{donazione.cognome_donatore | e}}
-                          {% else %}
-                          anonimo
-                          {% endif %}
-                        </h5>
-                        <p class="card-text">{{donazione.testo_donazione}}</p>
-                        <p class="card-text">Importo donazione: {{donazione.importo | e}} €</p>
-                        <p class="card-text">Data donazione: {{donazione.data_donazione | e}}</p>
-
-                        
-                        
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {% endfor %}
-
-        </div>
-    </div>
-</class>
-
-</main>
 {% endblock %}

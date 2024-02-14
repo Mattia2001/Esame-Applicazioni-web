@@ -23,14 +23,31 @@
     width: 60px;
 }
 
-.progress-bar {
-  background-color: #007bff;
-  height: 20px;
-  border-radius: 2px;
-  color: white;
-  text-align: center;
-  transition: width 0.6s ease;
-  overflow: hidden; /* Aggiunto overflow per evitare testo che fuoriesce dalla barra */
+/* style.css */
+.img-full {
+  height: 100%;
+  object-fit: cover;
+}
+
+
+/* style.css */
+.profile-image {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+
+.fixed-height-card {
+  height: 250px; /* Imposta l'altezza fissa per tutte le card */
+  overflow: hidden;
+}
+
+.card-img-container img {
+  height: 100%; /* Fa in modo che le immagini si adattino all'altezza della card */
+  width: 100%;
+  object-fit: contain; /* Mostra tutt al'immagine senza tagliarla */
 }
 
 .raccolte_terminate_successo{color:green}
