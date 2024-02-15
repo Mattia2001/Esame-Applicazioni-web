@@ -39,8 +39,10 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                 <!--Le raccolte in corso sono modificabili attraverso un apposito pulsante
                 oppure cancellabili attraverso un altro pulsante ancora-->
                 <h2>Le tue raccolte in corso:</h2>
+                {% set has_active_collections = false %}
                 {% for raccolta in raccolte_utente %}
                     {% if raccolta.status == "attiva" %}
+                        {% set has_active_collections = true %}
                         <div class="card mb-4 fixed-height-card" >
                             <div class="row g-0">
                                     <div class="col-md-4 card-img-container">
@@ -140,12 +142,20 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                         {% endif %}
                     {% endfor %}
 
+                    {% if not has_active_collections %}
+                        <div class="alert alert-info" role="alert">
+                            Non hai raccolte fondi attive al momento.
+                        </div>
+                    {% endif %}
+
                         <!--Qui finiscono le raccolte attive (che si devono poter modificare)
                         Iniziano quelle terminate e non più modificabili-->
 
                         <h2>Le tue raccolte terminate:</h2>
+                        {% set has_finished_collections = false %}
                         {% for raccolta in raccolte_utente %}
                             {% if raccolta.status == "terminata" %}
+                                {% set has_finished_collections = true %}
                                 <div class="card mb-4 fixed-height-card">
                                     <div class="row g-0">
                                             <div class="col-md-4 card-img-container">
@@ -186,6 +196,13 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                                 </div>
                             {% endif %}
                         {% endfor %}
+
+                        {% if not has_finished_collections %}
+                            <div class="alert alert-info" role="alert">
+                                Non hai raccolte fondi terminate al momento.
+                            </div>
+                        {% endif %}
+
                     </div>
                 </div>
             </div>

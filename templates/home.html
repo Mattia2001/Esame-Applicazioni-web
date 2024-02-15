@@ -23,6 +23,9 @@
                 {% if not current_user.is_authenticated %}
                 <section>
                     <h3>Login</h3>
+                    <div class="alert alert-info" role="alert">
+                      Devi autenticarti per iniziare raccolte fondi
+                    </div>
                     <div class="bg-light p-4 border rounded mb-3">
                         <form action="/login" method="POST">
                             <div class="mb-3">
@@ -54,7 +57,8 @@
             </aside>
         </div>
 
-        <div class="col-lg-9">
+      <main class="col-lg-9">
+        <div class="col-9">
           <div class="container mt-4">
               {% for raccolta in raccolte %}
               {% if raccolta.status == 'attiva' %}
@@ -95,7 +99,7 @@
 
                 <!-- Pulsante per aggiungere una nuova raccolta fondi -->
                 {% if current_user.is_authenticated %}
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">Aggiungi nuova raccolta</button>
+                <button type="button" class="bottone_nuova_raccolta" data-bs-toggle="modal" data-bs-target="#createModal">Aggiungi nuova raccolta</button>
                 <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
@@ -160,6 +164,7 @@
                 {% endif %}
             </div>
         </div>
+      </main>
     </div>
 </div>
 {% endblock %}

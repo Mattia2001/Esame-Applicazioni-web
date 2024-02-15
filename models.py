@@ -11,7 +11,10 @@ class User(UserMixin):
         self.immagine_utente = immagine_utente
         self.portafoglio = portafoglio
 
-    # this is required because I defined id_user in the database rather than "id"
+    '''Nel database ho definito chiave primaria "id_utente" invece di "id" come richiesto da flask login.
+       Con questa funzione ci assicuriamo che l'identificatore univoco dell'utente sia ugualmente individuato
+       seppur con un nome diverso'''
+
     def get_id(self):
         # Return the user identifier as a unicode string
         return str(self.id_utente)

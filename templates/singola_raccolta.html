@@ -53,14 +53,19 @@
         <!-- Sezione Donazioni -->
         <h3>Donazioni:</h3>
         {% for donazione in donazioni %}
-        <div class="card mb-3">
-          <div class="row g-0">
-            <div class="col-lg-6">
-              <div class="card-body">
-                <h5 class="card-title">Donatore: {% if donazione.donatore != None %}{{ donazione.nome_donatore | e }} {{ donazione.cognome_donatore | e }}{% else %}Anonimo{% endif %}</h5>
-                <p class="card-text">{{ donazione.testo_donazione }}</p>
-                <p class="card-text">Importo donazione: {{ donazione.importo | e }} €</p>
-                <p class="card-text">Data donazione: {{ donazione.data_donazione | e }}</p>
+        <!--Il riquadro della donazione è più piccolo di quella della raccolta-->
+        <div class="row">
+          <div class="col-7">
+            <div class="card mb-3">
+              <div class="row g-0">
+                <div class="col-lg-6">
+                  <div class="card-body">
+                    <h5 class="card-title">Donatore: {% if donazione.id_donatore != None %}{{ donazione.nome_donatore | e }} {{ donazione.cognome_donatore | e }}{% else %}Anonimo{% endif %}</h5>
+                    <p class="card-text">{{ donazione.testo_donazione }}</p>
+                    <p class="card-text">Importo donazione: {{ donazione.importo | e }} €</p>
+                    <p class="card-text">Data donazione: {{ donazione.data_donazione | e }}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

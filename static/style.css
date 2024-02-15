@@ -8,7 +8,7 @@
     background-color: #0056b3; /* A darker shade of blue for hover */
   }
 
-  .mybutton {
+  .bottone_nuova_donazione {
     background-color: #0056b3;
     border: none;
     border-radius: 50%;
@@ -23,6 +23,23 @@
     width: 60px;
 }
 
+.bottone_nuova_raccolta {
+  background-color: #007bff;  /* Colore di sfondo Bootstrap primary blue*/
+  border: none;  /* Nessun bordo */
+  bottom: 30px;  /* Posizione dal basso */
+  color: white;  /* Colore del testo */
+  height: auto;  /* Altezza automatica basata sul contenuto */
+  padding: 10px 20px; /* Padding interno per aumentare lo spazio intorno al testo */
+  position: fixed;  /* Posizione fissa nella pagina */
+  right: 30px;  /* Posizione dalla destra */
+  text-align: center;  /* Allineamento del testo al centro */
+  text-decoration: none;  /* Nessuna decorazione del testo */
+  vertical-align: middle;  /* Allineamento verticale */
+  width: auto;  /* Larghezza automatica basata sul contenuto */
+  border-radius: 20px;  /* Bordo arrotondato */
+}
+
+
 /* style.css */
 .img-full {
   height: 100%;
@@ -30,12 +47,15 @@
 }
 
 
-/* style.css */
 .profile-image {
-  width: 40px;
-  height: 40px;
-  object-fit: cover;
-  border-radius: 50%;
+  width: 40px; /* O la dimensione desiderata */
+  height: auto;
+  border-radius: 50%; /* Rende l'immagine circolare, se desiderato */
+}
+
+/* Assicurati che l'allineamento degli elementi sia centrato verticalmente */
+.d-flex.align-items-center {
+  align-items: center; /* Questo dovrebbe già centrare gli elementi, ma è incluso per chiarezza */
 }
 
 
@@ -48,6 +68,7 @@
   height: 100%; /* Fa in modo che le immagini si adattino all'altezza della card */
   width: 100%;
   object-fit: contain; /* Mostra tutt al'immagine senza tagliarla */
+  object-position: center; /* Centra l'immagine nel suo contenitore */
 }
 
 .raccolte_terminate_successo{color:green}

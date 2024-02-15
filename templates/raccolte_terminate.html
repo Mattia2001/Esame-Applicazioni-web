@@ -4,6 +4,7 @@
 {% block page_name %}Raccolte terminate{% endblock %}
 
 {% block content %}
+
 <div class="container">
     <div class="row">
         <!-- Aside per l'utente o il form di login -->
@@ -46,6 +47,7 @@
         </div>
 
         <!-- Contenuto principale per le raccolte terminate -->
+      <main class="col-lg-9">
         <div class="col-lg-9">
           {% for raccolta in raccolte_terminate%}
           <div class="card mb-4 fixed-height-card" >
@@ -58,7 +60,16 @@
                 {% endif %}
               </div>
               <div class="col-md-8">
-                <div class="card-body">
+                <div class="card-body d-flex flex-column justify-content-between">
+                  <div class="d-flex align-items-center mb-3"> <!-- Usa d-flex e align-items-center per allineare l'immagine di profilo e nome dell'utente -->
+                    <!-- Immagine di profilo -->
+                    {% if raccolta.immagine_utente %}
+                    <img src="{{ url_for('static', filename=raccolta.immagine_utente) }}" class="profile-image me-2" alt="Immagine di profilo">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='no_immagine_utente.jpg') }}" class="profile-image me-2" alt="Immagine di profilo">
+                    {% endif %}
+                    <p>{{raccolta.nome}} {{raccolta.cognome}}</p>
+                  </div>
                   <h5 class="card-title"> 
                       {{raccolta.nome_raccolta | e}}
                     - {% if raccolta.tipo_raccolta == 'lampo' %} Lampo
@@ -87,6 +98,8 @@
           </div>
           {% endfor %}
         </div>
+      </main>
+
     </div>
 </div>
 {% endblock %}

@@ -22,6 +22,7 @@ def get_raccolte():
 
 
 # estrai tutte le raccolte terminate, quindi con status = 'terminata'
+# estrai anche nome, cognome e immagine utente degli organizzatori
 def get_raccolte_terminate():
 
     conn = sqlite3.connect('db/raccolte_fondi.db')
@@ -31,7 +32,7 @@ def get_raccolte_terminate():
     cursor = conn.cursor()
     status_terminata = 'terminata'
 
-    sql = 'SELECT * FROM raccolte WHERE status = ? ORDER BY data_creazione DESC'
+    sql = 'SELECT raccolte.id_raccolta,raccolte.nome_raccolta,raccolte.descrizione,raccolte.immagine,raccolte.data_creazione,raccolte.data_termine,raccolte.cifra_attuale,raccolte.cifra_da_raggiungere,raccolte.tipo_raccolta,raccolte.organizzatore_raccolta,raccolte.importo_minimo,raccolte.status,raccolte.aggiornata,raccolte.importo_massimo,utenti.nome,utenti.cognome,utenti.immagine_utente FROM raccolte LEFT JOIN utenti ON raccolte.organizzatore_raccolta = utenti.id_utente WHERE status = ? ORDER BY data_creazione DESC'
     cursor.execute(sql, (status_terminata,))
     raccolte_terminate = cursor.fetchall()
 
