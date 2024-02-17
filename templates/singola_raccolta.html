@@ -33,11 +33,11 @@
                   {% else %}
                   <img src="{{ url_for('static', filename='no_immagine_utente.jpg') }}" class="profile-image me-2" alt="Immagine di profilo">
                   {% endif %}
-                  <p>{{raccolta.nome}} {{raccolta.cognome}}</p>
+                  <p class="mb-1">{{raccolta.nome}} {{raccolta.cognome}}</p>
                 </div>
                 <h5 class="card-title mb-0">{{raccolta.nome_raccolta | e}}</h5>
-                <p class="card-text">{{raccolta.descrizione | e}}</p>
-                <p>Raccolte iniziata il: {{raccolta.data_creazione | e}} - Termina il: {{raccolta.data_termine | e}}</p>
+                <p class="card-text mb-3">{{raccolta.descrizione | e}}</p>
+                <p>Iniziata il: {{raccolta.data_creazione | e}} - Termina il: {{raccolta.data_termine | e}}</p>
                 <p>Totale raccolto: {{raccolta.cifra_attuale | e}} € / {{raccolta.cifra_da_raggiungere | e}} €</p>
                 <p>Importo minimo donazione: {{raccolta.importo_minimo | int}}€ - Importo massimo donazione: {{raccolta.importo_massimo | int}}€</p>
                 {% if raccolta.status == "attiva" %}
@@ -58,7 +58,7 @@
           <div class="col-7">
             <div class="card mb-3">
               <div class="row g-0">
-                <div class="col-lg-6">
+                <div class="col-lg-9">
                   <div class="card-body">
                     <h5 class="card-title">Donatore: {% if donazione.id_donatore != None %}{{ donazione.nome_donatore | e }} {{ donazione.cognome_donatore | e }}{% else %}Anonimo{% endif %}</h5>
                     <p class="card-text">{{ donazione.testo_donazione }}</p>
@@ -139,12 +139,12 @@
         <h4>Dati pagamento</h4>
             <div class="mb-3">
                 <label for="numeroCartaInput" class="form-label">Numero carta di credito</label>
-                <input type="text" class="form-control" id="numeroCartaInput" name="numero_carta" placeholder="Numero carta di credito" required pattern="\d{16}">
+                <input type="text" class="form-control" id="numeroCartaInput" name="numero_carta" placeholder="wwww-xxxx-yyyy-zzzz" required pattern="\d{16}">
             </div>
             <div class="row g-3"> 
               <div class="col-md-6"> 
                   <label for="cvvInput" class="form-label">CVV</label>
-                  <input type="text" class="form-control" id="cvvInput" name="cvv" placeholder="CVV" required pattern="\d{3}">
+                  <input type="text" class="form-control" id="cvvInput" name="cvv" placeholder="CVV" maxlength="3"  required pattern="\d{3}">
               </div>
               <div class="col-md-6"> 
                   <label for="scadenzaInput" class="form-label">Data di scadenza</label>

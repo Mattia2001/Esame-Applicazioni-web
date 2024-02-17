@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}Raccolte terminate{% endblock %}
+{% block title %}Home{% endblock %}
 {% block home_active %}active{% endblock %}
-{% block page_name %}Raccolte terminate{% endblock %}
+{% block page_name %}Home{% endblock %}
 
 {% block content %}
 
@@ -84,10 +84,10 @@
                               <p class="card-text">{{ raccolta.descrizione }}</p>
                               <p class="card-text">Totale raccolto: {{ raccolta.cifra_attuale }}€ / {{ raccolta.cifra_da_raggiungere }} €</p>
                               {% if raccolta.tipo_raccolta == 'lampo' %}
-                              <p class="card-text"><small class="text-muted">Raccolta creata alle ore: {{ raccolta.data_creazione.split(' ')[1] }}</small></p>
+                              <p class="card-text"><small class="text-muted">Creata alle ore: {{ raccolta.data_creazione.split(' ')[1] }}</small></p>
                               <p class="card-text"><small class="text-muted">Termina alle ore: {{ raccolta.data_termine.split(' ')[1] }}</small></p>
                               {% else %}
-                              <p class="card-text"><small class="text-muted">Raccolta creata il: {{ raccolta.data_creazione }}</small></p>
+                              <p class="card-text"><small class="text-muted">Creata il: {{ raccolta.data_creazione }}</small></p>
                               <p class="card-text"><small class="text-muted">Termina il: {{ raccolta.data_termine }}</small></p>
                               {% endif %}
                           </div>
@@ -143,10 +143,15 @@
                                     <input type="text" class="form-control" id="importo_massimoInput" name="importo_massimo" required>
                                   </div>
                                 </div>
-                                <div class="col-md-6"> 
-                                  <label for="data_termineInput" class="form-label">Termine raccolta</label>
-                                  <input type="date" class="form-control" id="data_termineInput" name="data_termine" required>
+                                <!--min e max sono calcolati da un'apposita funzione python-->
+                                <div class="mb-3">
+                                    <label for="data_termineInput" class="form-label">Termine raccolta</label>
+                                    <input type="date" class="form-control" id="data_termineInput" name="data_termine" 
+                                          required 
+                                          min="{{ oggi }}" 
+                                          max="{{ massimo }}">
                                 </div>
+
                                 <div class="mb-3 form-check">
                                   <label class="form-check-label" for="tipo_raccolta_checkbox">Lampo</label>
                                   <input type="checkbox" class="form-check-input" id="tipo_raccolta_checkbox" name="tipo_raccolta">

@@ -73,3 +73,8 @@
 
 .raccolte_terminate_successo{color:green}
 .raccolte_terminate_fallita{color:red}
+
+.spazio-tra-sezioni {
+  margin-bottom: 30px; /* O qualsiasi altro valore che preferisci */
+}
+

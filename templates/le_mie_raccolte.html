@@ -10,6 +10,16 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
 
 {% block content %}
 
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
 <!--Aside con l'immagine dell'utente e il suo portafolgio-->
 
 <div class="container">
@@ -39,10 +49,9 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                 <!--Le raccolte in corso sono modificabili attraverso un apposito pulsante
                 oppure cancellabili attraverso un altro pulsante ancora-->
                 <h2>Le tue raccolte in corso:</h2>
-                {% set has_active_collections = false %}
+                
                 {% for raccolta in raccolte_utente %}
                     {% if raccolta.status == "attiva" %}
-                        {% set has_active_collections = true %}
                         <div class="card mb-4 fixed-height-card" >
                             <div class="row g-0">
                                     <div class="col-md-4 card-img-container">
@@ -63,10 +72,10 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                                         <p class="card-text">{{ raccolta.descrizione }}</p>
                                         <p class="card-text">Totale raccolto: {{ raccolta.cifra_attuale }}€ / {{ raccolta.cifra_da_raggiungere }} €</p>
                                         {% if raccolta.tipo_raccolta == 'lampo' %}
-                                            <p class="card-text"><small class="text-muted">Raccolta creata alle ore: {{ raccolta.data_creazione.split(' ')[1] }}</small></p>
+                                            <p class="card-text"><small class="text-muted">Creata alle ore: {{ raccolta.data_creazione.split(' ')[1] }}</small></p>
                                             <p class="card-text"><small class="text-muted">Termina alle ore: {{ raccolta.data_termine.split(' ')[1] }}</small></p>
                                         {% else %}
-                                            <p class="card-text"><small class="text-muted">Raccolta creata il: {{ raccolta.data_creazione }}</small></p>
+                                            <p class="card-text"><small class="text-muted">Creata il: {{ raccolta.data_creazione }}</small></p>
                                             <p class="card-text"><small class="text-muted">Termina il: {{ raccolta.data_termine }}</small></p>
                                         {% endif %}
 
@@ -118,7 +127,23 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                                                                     <input type="text" class="form-control" id="nuovo_importo_massimoInput" name="nuovo_importo_massimo" value="{{ raccolta.importo_massimo }}" required>
                                                                 </div>
                                                             </div>
+                                                            {% if raccolta.tipo_modificabile == "si" %}
+                                                            <!--Il tipo della raccolta si può cambiare solo se non sono passati più di 5 minuti dalla creazione-->
+                                                            <div class="mb-3 py-2">
+                                                                <label class="form-check-label" for="nuovo_tipo_raccolta_checkbox">Lampo</label>
+                                                                <input type="checkbox" class="form-check-input" id="nuovo_tipo_raccolta_checkbox" name="nuovo_tipo_raccolta">
+                                                              </div>
+                                                            {% else %}
+                                                            <p class="card-text"><small class="text-muted">Non puoi più modificare il tipo di raccolta perchè sono trascorsi più di 5 minuti dalla sua creazione.</small></p>
+                                                            {% endif %}
+                                                            <div class="mb-3 py-2"> 
+                                                                <label for="nuova_data_termineInput" class="form-label">Nuovo termine raccolta</label>
+                                                                <input type="date" class="form-control" id="nuova_data_termineInput" name="nuova_data_termine" value="{{ raccolta.data_termine}}" required>
+                                                              </div>
                                                             <input type="hidden" name="id_raccolta" value="{{ raccolta.id_raccolta }}">
+                                                            <!--fornisci anche la vecchia data termine per validazioni e formulare la nuova data termine a seconda del tipo della 
+                                                            nuova raccolta-->
+                                                            <input type="hidden" name="data_termine" value="{{ raccolta.data_termine }}">
                                                         </div>
                                                         <div class="modal-footer">
                                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
@@ -142,20 +167,17 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                         {% endif %}
                     {% endfor %}
 
-                    {% if not has_active_collections %}
-                        <div class="alert alert-info" role="alert">
-                            Non hai raccolte fondi attive al momento.
-                        </div>
-                    {% endif %}
+
+                    <!-- Spazio tra le raccolte in corso e quelle terminate -->
+                    <div class="spazio-tra-sezioni"></div>
 
                         <!--Qui finiscono le raccolte attive (che si devono poter modificare)
                         Iniziano quelle terminate e non più modificabili-->
 
                         <h2>Le tue raccolte terminate:</h2>
-                        {% set has_finished_collections = false %}
+                        
                         {% for raccolta in raccolte_utente %}
                             {% if raccolta.status == "terminata" %}
-                                {% set has_finished_collections = true %}
                                 <div class="card mb-4 fixed-height-card">
                                     <div class="row g-0">
                                             <div class="col-md-4 card-img-container">
@@ -188,7 +210,7 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                                                     <h5 class="raccolte_terminate_fallita mb-0">Obiettivo non raggiunto</h5>
                                                 {% endif %}
                                                 </div>
-                                                <p class="card-text"><small class="text-muted">Raccolta creata il: {{ raccolta.data_creazione }}</small></p>
+                                                <p class="card-text"><small class="text-muted">Creata il: {{ raccolta.data_creazione }}</small></p>
                                                 <p class="card-text"><small class="text-muted">Terminata il: {{ raccolta.data_termine }}</small></p> 
                                             </div>
                                         </div>
@@ -196,12 +218,6 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                                 </div>
                             {% endif %}
                         {% endfor %}
-
-                        {% if not has_finished_collections %}
-                            <div class="alert alert-info" role="alert">
-                                Non hai raccolte fondi terminate al momento.
-                            </div>
-                        {% endif %}
 
                     </div>
                 </div>

@@ -32,7 +32,10 @@ login_manager.init_app(app)
    Se poi la raccolta è andata a buon fine, ovvero se:
    cifra_raccolta >= cifra_da_raggiungere
    Allora:
-   portafoglio = portafoglio + cifra_raccolta WHERE id_utente = organizzatore_raccolta'''
+   portafoglio = portafoglio + cifra_raccolta WHERE id_utente = organizzatore_raccolta
+   
+   Inoltre, bisogna verificare quali raccolte siano ancora di tipo modificabile. Il tipo della raccolta
+   non è più modificabile da normale a lampo se sono trascorsi più di 5 minuti dalla sua creazione.'''
 
 @app.before_request
 def update_before_request():
@@ -41,8 +44,11 @@ def update_before_request():
     try:
         # Esegui la funzione di controllo prima di ogni richiesta
         raccolte_dao.update_status_e_portafoglio()
-        #utenti_dao.update_portafoglio()
         app.logger.info('Fine update_status_e_portafoglio')
+
+        raccolte_dao.update_tipo_modificabile()
+        app.logger.info('Fine update_tipo_modificabile')
+        
     except Exception as e:
         print('Error during update:', str(e))
 
@@ -58,15 +64,17 @@ def home():
        quelle attive.'''
 
     now = datetime.now()  # Get the current date and time
-    current_date = now.date()  # Get the current date
-    current_hour = now.hour  # Get the current hour
-    current_minute = now.minute  # Get the current minute
-    data_oggi = now.strftime("%Y-%m-%d %H:%M")
+    data_e_ora_oggi = now.strftime("%Y-%m-%d %H:%M")
+    data_oggi = now.date()
 
     # display all the posts
     raccolte_db = raccolte_dao.get_raccolte()
 
-    return render_template('home.html', raccolte=raccolte_db, oggi=data_oggi)
+    # questo è il termine massimo per la scadenza della raccolta
+    # necessario nel form per creare una nuova raccolta fondi
+    data_massima = (now + timedelta(days=14)).date()
+
+    return render_template('home.html', raccolte=raccolte_db, oggi=data_e_ora_oggi, minimo=data_oggi, massimo=data_massima)
 
 # restituisci solo la pagina per iscriversi
 @app.route('/iscriviti')
@@ -196,7 +204,8 @@ def nuova_raccolta():
         - organizzatore_raccolta = current_user
         - data creazione da definire al momento della sottomissione del form
         - data_termine da definire in base a tipo_raccolta
-        - status (sempre attivo al momento della creazione)'''
+        - status (sempre attivo al momento della creazione)
+        - tipo_modificabile (sempre "si" al momento della creazione)'''
             
     raccolta = request.form.to_dict()
 
@@ -259,12 +268,13 @@ def nuova_raccolta():
 
     # al momento della sua creazione, i soldi non sono ancora trasferiti sul portafoglio
     raccolta['aggiornata'] = 'no'
+
+    # al momento della sua creazione, la raccolta è ancora modificabile da normale a lampo e viceversa
+    raccolta['tipo_modificabile'] = "si"
     
     # data del termine della raccolta, dipende da tipo_raccolta (senza secondi)
     if raccolta['tipo_raccolta'] == 'lampo':
-        #raccolta['data_termine'] = (now + timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M")
-        # per fare delle prove metto delta=1 minuto
-        raccolta['data_termine'] = (now + timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M")
+        raccolta['data_termine'] = (now + timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M")
         print("La raccolta è di tipo lampo")
     else:
         print("La raccolta è di tipo normale")
@@ -415,12 +425,31 @@ def le_mie_raccolte():
     # bisogna estrarre dal database tutte le raccolte del current user sfruttando il suo id
     raccolte_utente_db = raccolte_dao.get_raccolta_by_id_utente(id_utente)
 
-    return render_template('le_mie_raccolte.html', raccolte_utente = raccolte_utente_db)
+    '''Nella pagina "le mie raccolte" è possibile modificare le raccolte in corso.
+    Il tipo delle raccolte è modificabile da normale a lampo solo se non sono trascorsi più
+    di 5 minuti dalla creazione della raccolta. Pertanto bisogna verificare quanto tempo è trascorso
+    dalla creazione di ciascuna raccolta e aggiornare un campo "modificabile" che garantirà o meno
+    la modifica del campo "lampo" nel form di modifica'''
+
+    now = datetime.utcnow()
+    raccolte_modificate = []
+
+    for raccolta in raccolte_utente_db:
+        # Converti la tupla in dizionario per facilità di manipolazione
+        raccolta_dict = dict(raccolta)
+        data_creazione = datetime.strptime(raccolta_dict['data_creazione'], '%Y-%m-%d %H:%M')
+        raccolta_dict['modificabile'] = (now - data_creazione) <= timedelta(minutes=5)
+        raccolte_modificate.append(raccolta_dict)
+
+    return render_template('le_mie_raccolte.html', raccolte_utente = raccolte_modificate)
 
 # funzione che permette di modificare la raccolta in corso
 @app.route('/modifica_raccolta/<int:id_raccolta>', methods=['POST'])
 @login_required
 def modifica_raccolta(id_raccolta):
+
+    # Get the current date and time
+    now = datetime.now()
 
     # Ricevi dal form tutti i dati da inserire nella nuova raccolta
     
@@ -433,23 +462,45 @@ def modifica_raccolta(id_raccolta):
 
     # controlla che la nuova descrizione non sia vuota
     if nuovi_dati['nuova_descrizione'] == '':
+        flash('La nuova descrizione non può essere vuota!', 'danger')
         app.logger.error('La nuova descrizione non può essere vuota!')
         return redirect(url_for('le_mie_raccolte'))
     
     # controlla che la nuova cifra da raggiungere non sia vuota
     if nuovi_dati['nuova_cifra_da_raggiungere'] == '':
+        flash('La nuova cifra da raggiungere non può essere vuota!', 'danger')
         app.logger.error('La nuova cifra da raggiungere non può essere vuota!')
         return redirect(url_for('le_mie_raccolte'))
     
     # controlla che il nuovo importo minimo non sia vuoto
     if nuovi_dati['nuovo_importo_minimo'] == '':
+        flash('Il nuovo importo minimo non può essere vuoto!', 'danger')
         app.logger.error('Il nuovo importo minimo non può essere vuoto!')
         return redirect(url_for('le_mie_raccolte'))
     
     # controlla che il nuovo importo massimo non sia vuoto
     if nuovi_dati['nuovo_importo_massimo'] == '':
+        flash('Il nuovo importo massimo non può essere vuoto!', 'danger')
         app.logger.error('Il nuovo importo massimo non può essere vuoto!')
         return redirect(url_for('le_mie_raccolte'))
+    
+    nuovo_tipo_raccolta = nuovi_dati.get('nuovo_tipo_raccolta', 'off')  # 'off' as default if not present
+    # il tipo di raccolta: lampo o normale
+    if nuovo_tipo_raccolta == 'on':
+        nuovi_dati['nuovo_tipo_raccolta'] = 'lampo'
+    else:
+        nuovi_dati['nuovo_tipo_raccolta'] = 'normale'
+    
+    # controlla che la nuova data di scadenza non ecceda di 14 giorni quella attuale se il tipo della raccolta è normale
+    if nuovi_dati['nuova_data_termine'] > (timedelta(days=14) + now).strftime("%Y-%m-%d %H:%M") and nuovi_dati['nuovo_tipo_raccolta'] == 'normale':
+        flash('La nuova data di termine non può eccedere di 14 giorni la data attuale', 'danger')
+        app.logger.error('La nuova data di termine non può eccedere di 14 giorni la data attuale')
+        return redirect(url_for('le_mie_raccolte'))
+    
+    # se il nuovo tipo di raccolta è di tipo lampo aggiungi 5 minuti
+    if nuovi_dati['nuovo_tipo_raccolta'] == 'lampo':
+        nuovi_dati['nuova_data_termine'] = (now + timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M")
+        print("La nuova raccolta è di tipo lampo")
 
 
     raccolte_dao.modifica_raccolta_by_id_raccolta(id_raccolta, nuovi_dati)

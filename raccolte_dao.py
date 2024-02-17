@@ -11,7 +11,7 @@ def get_raccolte():
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    sql = 'SELECT raccolte.id_raccolta, raccolte.nome_raccolta, raccolte.descrizione, raccolte.immagine, raccolte.data_creazione, raccolte.data_termine, raccolte.cifra_attuale, raccolte.cifra_da_raggiungere, raccolte.tipo_raccolta, raccolte.organizzatore_raccolta, raccolte.importo_minimo, raccolte.status, raccolte.aggiornata, raccolte.importo_massimo, utenti.nome, utenti.cognome FROM raccolte LEFT JOIN utenti ON raccolte.organizzatore_raccolta = utenti.id_utente ORDER BY data_creazione DESC'
+    sql = 'SELECT raccolte.id_raccolta, raccolte.nome_raccolta, raccolte.descrizione, raccolte.immagine, raccolte.data_creazione, raccolte.data_termine, raccolte.cifra_attuale, raccolte.cifra_da_raggiungere, raccolte.tipo_raccolta, raccolte.organizzatore_raccolta, raccolte.importo_minimo, raccolte.status, raccolte.aggiornata, raccolte.importo_massimo, raccolte.tipo_modificabile, utenti.nome, utenti.cognome FROM raccolte LEFT JOIN utenti ON raccolte.organizzatore_raccolta = utenti.id_utente ORDER BY data_creazione DESC'
     cursor.execute(sql)
     raccolte = cursor.fetchall()
 
@@ -94,7 +94,7 @@ def add_raccolta(raccolta):
     #raccolta['status'] = 'attiva' if raccolta['data_termine'] > data_oggi else 'terminata'
 
     if 'immagine_raccolta' in raccolta:
-        sql = 'INSERT INTO raccolte(nome_raccolta,descrizione,immagine,data_creazione,data_termine,cifra_attuale,cifra_da_raggiungere,tipo_raccolta,organizzatore_raccolta,importo_minimo,status,aggiornata,importo_massimo) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)'
+        sql = 'INSERT INTO raccolte(nome_raccolta,descrizione,immagine,data_creazione,data_termine,cifra_attuale,cifra_da_raggiungere,tipo_raccolta,organizzatore_raccolta,importo_minimo,status,aggiornata,importo_massimo,tipo_modificabile) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
         cursor.execute(sql, (raccolta['titolo_raccolta'],
                              raccolta['descrizione'], 
                              raccolta['immagine_raccolta'],
@@ -107,10 +107,11 @@ def add_raccolta(raccolta):
                              raccolta['importo_minimo'],
                              raccolta['status'],
                              raccolta['aggiornata'],
-                             raccolta['importo_massimo']
+                             raccolta['importo_massimo'],
+                             raccolta['tipo_modificabile']
                              ))
     else:
-        sql = 'INSERT INTO raccolte(nome_raccolta,descrizione,data_creazione,data_termine,cifra_attuale,cifra_da_raggiungere,tipo_raccolta,organizzatore_raccolta,importo_minimo,status,aggiornata,importo_massimo) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)'
+        sql = 'INSERT INTO raccolte(nome_raccolta,descrizione,data_creazione,data_termine,cifra_attuale,cifra_da_raggiungere,tipo_raccolta,organizzatore_raccolta,importo_minimo,status,aggiornata,importo_massimo,tipo_modificabile) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)'
         cursor.execute(sql, (raccolta['titolo_raccolta'],
                              raccolta['descrizione'], 
                              raccolta['data_creazione'],
@@ -122,7 +123,8 @@ def add_raccolta(raccolta):
                              raccolta['importo_minimo'],
                              raccolta['status'],
                              raccolta['aggiornata'],
-                             raccolta['importo_massimo']
+                             raccolta['importo_massimo'],
+                             raccolta['tipo_modificabile']
                              ))
     try:
         conn.commit()
@@ -148,22 +150,26 @@ def modifica_raccolta_by_id_raccolta(id_raccolta, nuovi_dati):
 
     # l'istruzione UPDATE non supporta la stessa sintassi di INSERT
     if 'nuova_immagine_raccolta' in nuovi_dati:
-        sql = 'UPDATE raccolte SET nome_raccolta = ?, descrizione = ?, immagine = ?, cifra_da_raggiungere = ?, importo_minimo = ?, importo_massimo=? WHERE id_raccolta = ?'
+        sql = 'UPDATE raccolte SET nome_raccolta = ?, descrizione = ?, immagine = ?, cifra_da_raggiungere = ?, tipo_raccolta = ?, importo_minimo = ?, importo_massimo=?, data_termine=? WHERE id_raccolta = ?'
         cursor.execute(sql, (nuovi_dati['nuovo_titolo_raccolta'],
                             nuovi_dati['nuova_descrizione'], 
                             nuovi_dati['nuova_immagine_raccolta'],
                             nuovi_dati['nuova_cifra_da_raggiungere'],
+                            nuovi_dati['nuovo_tipo_raccolta'],
                             nuovi_dati['nuovo_importo_minimo'], 
                             nuovi_dati['nuovo_importo_massimo'],
+                            nuovi_dati['nuova_data_termine'],
                             id_raccolta))
         
     else:
-        sql = 'UPDATE raccolte SET nome_raccolta = ?, descrizione = ?, cifra_da_raggiungere = ?, importo_minimo = ?, importo_massimo = ? WHERE id_raccolta = ?'
+        sql = 'UPDATE raccolte SET nome_raccolta = ?, descrizione = ?, cifra_da_raggiungere = ?, tipo_raccolta = ?, importo_minimo = ?, importo_massimo = ?, data_termine=? WHERE id_raccolta = ?'
         cursor.execute(sql, (nuovi_dati['nuovo_titolo_raccolta'],
                             nuovi_dati['nuova_descrizione'], 
                             nuovi_dati['nuova_cifra_da_raggiungere'],
+                            nuovi_dati['nuovo_tipo_raccolta'],
                             nuovi_dati['nuovo_importo_minimo'],
                             nuovi_dati['nuovo_importo_massimo'], 
+                            nuovi_dati['nuova_data_termine'],
                             id_raccolta))
     
     try:
@@ -251,5 +257,37 @@ def update_status_e_portafoglio():
         conn.rollback()
 
     conn.close()
+
+    return success
+
+'''Come la precedente, anche questa funzione viene invocata ad ogni richiesta http'''
+
+def update_tipo_modificabile():
+     
+    conn = sqlite3.connect('db/raccolte_fondi.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    success = False
+
+    now = datetime.now()
+    cinque_minuti_fa = now - timedelta(minutes=5)
+    
+    try:
+        # Aggiorna direttamente le raccolte dove la data_creazione è minore di "cinque_minuti_fa"
+        sql_aggiorna_tipo_modificabile = '''
+            UPDATE raccolte
+            SET tipo_modificabile = "no"
+            WHERE data_creazione <= ? AND tipo_modificabile = "si"
+        '''
+        cursor.execute(sql_aggiorna_tipo_modificabile, (cinque_minuti_fa.strftime("%Y-%m-%d %H:%M"),))
+        conn.commit()
+        success = True
+        print("Aggiornamento 'tipo_modificabile' completato con successo.")
+    except Exception as e:
+        print('Errore durante l\'aggiornamento del campo "tipo_modificabile":', e)
+        conn.rollback()
+    finally:
+        conn.close()
 
     return success
