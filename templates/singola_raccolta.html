@@ -104,6 +104,10 @@
             <input type="hidden" name="cognome_donatore" value="{{ current_user.cognome }}">
             <input type="hidden" name="id_donatore" value="{{current_user.id_utente}}">
           {% endif %}
+          <div class="mb-3 form-check">
+            <label class="form-check-label" for="anonimo_checkbox">Anonimo</label>
+            <input type="checkbox" class="form-check-input" id="anonimo_checkbox" name="utente_anonimo">
+          </div>
           <div class="mb-3">
             <label for="donazioneTextArea" class="form-label">Vuoi aggiungere un messaggio?</label>
             <textarea class="form-control" id="donazioneTextArea" name="testo_donazione" rows="3"
@@ -116,10 +120,6 @@
                 <input type="number" class="form-control" id="importo_donazioneInput" name="importo" aria-label="Cifra da raggiungere" min="{{raccolta.importo_minimo|int}}" max="{{raccolta.importo_massimo|int}}" required>
             </div>
         </div>                      
-        </div>
-        <div class="mb-3 form-check">
-          <label class="form-check-label" for="anonimo_checkbox">Anonimo</label>
-          <input type="checkbox" class="form-check-input" id="anonimo_checkbox" name="utente_anonimo">
         </div>
         <h4>Indirizzo</h4>
         <div class="row g-3">

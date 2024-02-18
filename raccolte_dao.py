@@ -50,7 +50,7 @@ def get_raccolta_by_id(id):
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    sql = 'SELECT raccolte.id_raccolta,raccolte.nome_raccolta,raccolte.descrizione,raccolte.immagine,raccolte.data_creazione,raccolte.data_termine,raccolte.cifra_attuale,raccolte.cifra_da_raggiungere,raccolte.tipo_raccolta,raccolte.organizzatore_raccolta,raccolte.importo_minimo,raccolte.status,raccolte.aggiornata,raccolte.importo_massimo,utenti.nome,utenti.cognome,utenti.immagine_utente FROM raccolte LEFT JOIN utenti ON raccolte.organizzatore_raccolta = utenti.id_utente WHERE raccolte.id_raccolta = ?'
+    sql = 'SELECT raccolte.id_raccolta,raccolte.nome_raccolta,raccolte.descrizione,raccolte.immagine,raccolte.data_creazione,raccolte.data_termine,raccolte.cifra_attuale,raccolte.cifra_da_raggiungere,raccolte.tipo_raccolta,raccolte.organizzatore_raccolta,raccolte.importo_minimo,raccolte.status,raccolte.aggiornata,raccolte.importo_massimo,utenti.nome,utenti.cognome,utenti.immagine_utente FROM raccolte LEFT JOIN utenti ON raccolte.organizzatore_raccolta = utenti.id_utente WHERE raccolte.id_raccolta = ? ORDER BY data_creazione DESC'
     cursor.execute(sql, (id,))
     #retrieve one record at a time from the result set.
     post = cursor.fetchone()
@@ -67,7 +67,7 @@ def get_raccolta_by_id_utente(id_utente):
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    sql = 'SELECT * FROM raccolte WHERE raccolte.organizzatore_raccolta = ?'
+    sql = 'SELECT * FROM raccolte WHERE raccolte.organizzatore_raccolta = ? ORDER BY data_creazione DESC'
     cursor.execute(sql, (id_utente,))
     #retrieve one record at a time from the result set.
     raccolte_utente = cursor.fetchall()
@@ -77,8 +77,6 @@ def get_raccolta_by_id_utente(id_utente):
 
     return raccolte_utente
     
-
-
 # aggiungi raccolta al database
 def add_raccolta(raccolta):
     conn = sqlite3.connect('db/raccolte_fondi.db')
@@ -252,6 +250,7 @@ def update_status_e_portafoglio():
     try:
         conn.commit()
         success = True
+        print("Aggiornamento di status e portafoglio completato con successo.")
     except Exception as e:
         print('Errore durante l\'aggiornamento del portafoglio:', str(e))
         conn.rollback()

@@ -48,7 +48,7 @@ def update_before_request():
 
         raccolte_dao.update_tipo_modificabile()
         app.logger.info('Fine update_tipo_modificabile')
-        
+
     except Exception as e:
         print('Error during update:', str(e))
 
@@ -241,11 +241,10 @@ def nuova_raccolta():
         app.logger.error('L\' importo massimo non può essere vuoto!')
         return redirect(url_for('home'))
     
-    #raccolta['data_termine'] = raccolta['data_termine'].strftime("%Y-%m-%d")
     tipo_raccolta = raccolta.get('tipo_raccolta', 'off')  # 'off' as default if not present
 
     # se la raccolta dura più di 14 giorni segnalare l'errore
-    if raccolta['data_termine'] > (now + timedelta(days=14)).strftime("%Y-%m-%d") and not (tipo_raccolta == 'on'):
+    if raccolta['data_termine'] > (now + timedelta(days=14)).strftime("%Y-%m-%d %H:%M") and not (tipo_raccolta == 'on'):
         flash('La raccolta non può durare più di 14 giorni', 'danger')
         app.logger.error('La raccolta non può durare più di 14 giorni')
         return redirect(url_for('home'))
@@ -277,6 +276,8 @@ def nuova_raccolta():
         raccolta['data_termine'] = (now + timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M")
         print("La raccolta è di tipo lampo")
     else:
+        #raccolta['data_termine'] = (raccolta['data_termine']).strftime("%Y-%m-%d %H:%M")
+        raccolta['data_termine'] = raccolta['data_termine'].replace('T', ' ')
         print("La raccolta è di tipo normale")
 
     # alla sua creazione, la cifra raggiunta della raccolta è zero
@@ -425,23 +426,7 @@ def le_mie_raccolte():
     # bisogna estrarre dal database tutte le raccolte del current user sfruttando il suo id
     raccolte_utente_db = raccolte_dao.get_raccolta_by_id_utente(id_utente)
 
-    '''Nella pagina "le mie raccolte" è possibile modificare le raccolte in corso.
-    Il tipo delle raccolte è modificabile da normale a lampo solo se non sono trascorsi più
-    di 5 minuti dalla creazione della raccolta. Pertanto bisogna verificare quanto tempo è trascorso
-    dalla creazione di ciascuna raccolta e aggiornare un campo "modificabile" che garantirà o meno
-    la modifica del campo "lampo" nel form di modifica'''
-
-    now = datetime.utcnow()
-    raccolte_modificate = []
-
-    for raccolta in raccolte_utente_db:
-        # Converti la tupla in dizionario per facilità di manipolazione
-        raccolta_dict = dict(raccolta)
-        data_creazione = datetime.strptime(raccolta_dict['data_creazione'], '%Y-%m-%d %H:%M')
-        raccolta_dict['modificabile'] = (now - data_creazione) <= timedelta(minutes=5)
-        raccolte_modificate.append(raccolta_dict)
-
-    return render_template('le_mie_raccolte.html', raccolte_utente = raccolte_modificate)
+    return render_template('le_mie_raccolte.html', raccolte_utente = raccolte_utente_db)
 
 # funzione che permette di modificare la raccolta in corso
 @app.route('/modifica_raccolta/<int:id_raccolta>', methods=['POST'])
@@ -501,6 +486,39 @@ def modifica_raccolta(id_raccolta):
     if nuovi_dati['nuovo_tipo_raccolta'] == 'lampo':
         nuovi_dati['nuova_data_termine'] = (now + timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M")
         print("La nuova raccolta è di tipo lampo")
+    else: 
+        nuovi_dati['nuova_data_termine'] = nuovi_dati['nuova_data_termine'].replace('T', ' ')
+        print("La nuova raccolta è di tipo normale")
+
+    # verifica se è stata ricevuta un'immagine, in caso affermativo
+    # ridimensionala e poi salvala con un nome che includa quello del creatore della raccolta
+    # ovvero il current user
+    nuova_immagine_raccolta = request.files['nuova_immagine_raccolta']
+    if nuova_immagine_raccolta:
+
+        # Open the user-provided image using the Image module
+        img = Image.open(nuova_immagine_raccolta)
+
+        # Get the width and height of the image
+        width, height = img.size
+
+        # Calculate the new height while maintaining the aspect ratio based on the desired width
+        new_height = height/width * POST_IMG_WIDTH
+
+        # Define the size for thumbnail creation with the desired width and calculated height
+        size = POST_IMG_WIDTH, new_height
+        img.thumbnail(size, Image.Resampling.LANCZOS)
+
+        # Extracting file extension from the image filename
+        ext = nuova_immagine_raccolta.filename.split('.')[-1]
+        # Getting the current timestamp in seconds
+        secondi = int(datetime.now().timestamp())       
+
+        # Saving the image with a unique filename in the 'static' directory
+        img.save('static/@' + current_user.nome.lower() + '-' + current_user.cognome.lower() + '-' + str(secondi) + '.' + ext)
+
+        # Updating the 'immagine_post' field in the post dictionary with the image filename
+        nuovi_dati['nuova_immagine_raccolta'] = '@' + current_user.nome.lower() + '-' + current_user.cognome.lower() + '-' + str(secondi) + '.' + ext
 
 
     raccolte_dao.modifica_raccolta_by_id_raccolta(id_raccolta, nuovi_dati)

@@ -138,7 +138,7 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                                                             {% endif %}
                                                             <div class="mb-3 py-2"> 
                                                                 <label for="nuova_data_termineInput" class="form-label">Nuovo termine raccolta</label>
-                                                                <input type="date" class="form-control" id="nuova_data_termineInput" name="nuova_data_termine" value="{{ raccolta.data_termine}}" required>
+                                                                <input type="datetime-local" class="form-control" id="nuova_data_termineInput" name="nuova_data_termine" value="{{ raccolta.data_termine}}" required>
                                                               </div>
                                                             <input type="hidden" name="id_raccolta" value="{{ raccolta.id_raccolta }}">
                                                             <!--fornisci anche la vecchia data termine per validazioni e formulare la nuova data termine a seconda del tipo della 
