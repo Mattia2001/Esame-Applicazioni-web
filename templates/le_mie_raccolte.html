@@ -56,31 +56,38 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                             <div class="row g-0">
                                     <div class="col-md-4 card-img-container">
                                     {% if raccolta.immagine %}
+                                    <a href="{{ url_for('singola_raccolta', id=raccolta.id_raccolta) }}">
                                         <img src="{{ url_for('static', filename=raccolta.immagine) }}" class="img-fluid rounded-start" alt="Questa è l'immagine della raccolta {{ raccolta.nome_raccolta | e }}">
+                                    </a>
                                     {% else %}
-                                    <img src="{{ url_for('static', filename='no_immagine_raccolta.jpg') }}" class="img-fluid rounded-start" alt="La raccolta {{ raccolta.nome_raccolta | e }} non ha immagine">
+                                    <a href="{{ url_for('singola_raccolta', id=raccolta.id_raccolta) }}">
+                                        <img src="{{ url_for('static', filename='no_immagine_raccolta.jpg') }}" class="img-fluid rounded-start" alt="La raccolta {{ raccolta.nome_raccolta | e }} non ha immagine">
+                                    </a>
                                     {% endif %}
                                     </div>
                                 <div class="col-md-8">
                                     <div class="card-body">
                                         <h5 class="card-title">
-                                            {{ raccolta.nome_raccolta | e }}
+                                            <a href="{{ url_for('singola_raccolta', id=raccolta.id_raccolta) }}">{{ raccolta.nome_raccolta | e }}</a>
                                             - {% if raccolta.tipo_raccolta == 'lampo' %} Lampo
                                             {% else %} Normale
                                             {% endif %}
                                         </h5>
-                                        <p class="card-text">{{ raccolta.descrizione }}</p>
+                                        <p class="card-text descrizione-card">{{ raccolta.descrizione }}</p>
                                         <p class="card-text">Totale raccolto: {{ raccolta.cifra_attuale }}€ / {{ raccolta.cifra_da_raggiungere }} €</p>
-                                        {% if raccolta.tipo_raccolta == 'lampo' %}
-                                            <p class="card-text"><small class="text-muted">Creata alle ore: {{ raccolta.data_creazione.split(' ')[1] }}</small></p>
-                                            <p class="card-text"><small class="text-muted">Termina alle ore: {{ raccolta.data_termine.split(' ')[1] }}</small></p>
-                                        {% else %}
-                                            <p class="card-text"><small class="text-muted">Creata il: {{ raccolta.data_creazione }}</small></p>
-                                            <p class="card-text"><small class="text-muted">Termina il: {{ raccolta.data_termine }}</small></p>
-                                        {% endif %}
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                {% if raccolta.tipo_raccolta == 'lampo' %}
+                                                    <p class="card-text"><small class="text-muted">Creata alle ore: {{ raccolta.data_creazione.split(' ')[1] }}</small></p>
+                                                    <p class="card-text"><small class="text-muted">Termina alle ore: {{ raccolta.data_termine.split(' ')[1] }}</small></p>
+                                                {% else %}
+                                                    <p class="card-text"><small class="text-muted">Creata il: {{ raccolta.data_creazione }}</small></p>
+                                                    <p class="card-text"><small class="text-muted">Termina il: {{ raccolta.data_termine }}</small></p>
+                                                {% endif %}
+                                            </div>
 
                             <!-- Pulsante Modifica, tutti i campi sono pre-popolati con i dati già esistenti relativi alla raccolta-->
-                            <div class="d-flex justify-content-start">
+                            <div class="d-flex align-items-center">
                                 <!-- Pulsante Modifica con Modal -->
                                 <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#createModal">
                                     Modifica
@@ -138,7 +145,7 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                                                             {% endif %}
                                                             <div class="mb-3 py-2"> 
                                                                 <label for="nuova_data_termineInput" class="form-label">Nuovo termine raccolta</label>
-                                                                <input type="datetime-local" class="form-control" id="nuova_data_termineInput" name="nuova_data_termine" value="{{ raccolta.data_termine}}" required>
+                                                                <input type="datetime-local" class="form-control" id="nuova_data_termineInput" name="nuova_data_termine" min="{{ oggi }}" max="{{ massimo }}" value="{{ raccolta.data_termine}}" required>
                                                               </div>
                                                             <input type="hidden" name="id_raccolta" value="{{ raccolta.id_raccolta }}">
                                                             <!--fornisci anche la vecchia data termine per validazioni e formulare la nuova data termine a seconda del tipo della 
@@ -154,11 +161,12 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                                             </div>
                                         </div>
                                                   
-                                        <!-- Pulsante Cancella -->
-                                        <form action="{{ url_for('cancella_raccolta', id_raccolta=raccolta.id_raccolta) }}" method="POST" onsubmit="return confirm('Sei sicuro di voler cancellare questa raccolta?');">
-                                            <input type="hidden" name="id_raccolta" value="{{ raccolta.id_raccolta }}">
-                                            <button type="submit" class="btn btn-danger">Cancella</button>
-                                        </form>
+                                            <!-- Pulsante Cancella -->
+                                            <form action="{{ url_for('cancella_raccolta', id_raccolta=raccolta.id_raccolta) }}" method="POST" onsubmit="return confirm('Sei sicuro di voler cancellare questa raccolta?');">
+                                                <input type="hidden" name="id_raccolta" value="{{ raccolta.id_raccolta }}">
+                                                <button type="submit" class="btn btn-danger">Cancella</button>
+                                            </form>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -195,7 +203,7 @@ che è consultabile nella colonna "portafoglio" nella tabella utente -->
                                                     {% else %} Normale
                                                     {% endif %}
                                                 </h5>
-                                                <p class="card-text">{{ raccolta.descrizione }}</p>
+                                                <p class="card-text descrizione-card">{{ raccolta.descrizione }}</p>
                                                 <p class="card-text">Totale raccolto: {{ raccolta.cifra_attuale }}€ / {{ raccolta.cifra_da_raggiungere }} €</p>
                                                 <div class="d-flex align-items-center">
                                                 {% if raccolta.cifra_attuale >= raccolta.cifra_da_raggiungere %}

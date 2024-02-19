@@ -1,0 +1,10 @@
+Utenti registrati: email e password
+
+giovanni.torlonia.1856@gmail.com ciao1
+demetrio.dinunzio.1976@gmail.com ciao2
+giuliana.carignano.1987@gmail.com ciao3
+giuseppina.rinaldi.1990@gmail.com ciao4
+lamberto.abbatelli.1956@gmail.com ciao5
+eleonora.colonna.1955@gmail.com ciao6
+
+Link del deploy: https://mattiaantonini22.pythonanywhere.com/

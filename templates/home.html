@@ -81,7 +81,7 @@
                                   <a href="{{ url_for('singola_raccolta', id=raccolta.id_raccolta) }}">{{ raccolta.nome_raccolta | e }}</a>
                                   - {% if raccolta.tipo_raccolta == 'lampo' %} Lampo {% else %} Normale {% endif %}
                               </h5>
-                              <p class="card-text">{{ raccolta.descrizione }}</p>
+                              <p class="card-text descrizione-card">{{ raccolta.descrizione }}</p>
                               <p class="card-text">Totale raccolto: {{ raccolta.cifra_attuale }}€ / {{ raccolta.cifra_da_raggiungere }} €</p>
                               {% if raccolta.tipo_raccolta == 'lampo' %}
                               <p class="card-text"><small class="text-muted">Creata alle ore: {{ raccolta.data_creazione.split(' ')[1] }}</small></p>

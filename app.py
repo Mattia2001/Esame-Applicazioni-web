@@ -422,11 +422,19 @@ def raccolte_terminate():
 @login_required
 def le_mie_raccolte():
 
+    now = datetime.now()  # Get the current date and time
+    data_e_ora_oggi = now.strftime("%Y-%m-%d %H:%M")
+    data_oggi = now.date()
+
+    # questo è il termine massimo per la scadenza della raccolta
+    # necessario nel form per creare una nuova raccolta fondi
+    data_massima = (now + timedelta(days=14)).date()
+
     id_utente = current_user.id_utente
     # bisogna estrarre dal database tutte le raccolte del current user sfruttando il suo id
     raccolte_utente_db = raccolte_dao.get_raccolta_by_id_utente(id_utente)
 
-    return render_template('le_mie_raccolte.html', raccolte_utente = raccolte_utente_db)
+    return render_template('le_mie_raccolte.html', raccolte_utente = raccolte_utente_db, oggi=data_e_ora_oggi, minimo=data_oggi, massimo=data_massima)
 
 # funzione che permette di modificare la raccolta in corso
 @app.route('/modifica_raccolta/<int:id_raccolta>', methods=['POST'])

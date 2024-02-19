@@ -17,11 +17,11 @@
         <div class="card mb-4">
           <div class="row g-0">
             <!-- Colonna per l'immagine della raccolta -->
-            <div class="col-md-4 d-flex align-items-stretch"> <!-- Usa d-flex e align-items-stretch per estendere l'immagine verticalmente -->
+            <div class="col-md-4 card-img-container"> <!-- Usa d-flex e align-items-stretch per estendere l'immagine verticalmente -->
               {% if raccolta.immagine %}
-              <img src="{{ url_for('static', filename=raccolta.immagine) }}" class="img-fluid w-100 img-full-height" alt="Immagine della raccolta: {{raccolta.nome_raccolta}}">
+              <img src="{{ url_for('static', filename=raccolta.immagine) }}" class="img-fluid img-fit-contain img-full-height" alt="Immagine della raccolta: {{raccolta.nome_raccolta}}">
               {% else %}
-              <img src="{{ url_for('static', filename='no_immagine_raccolta.jpg') }}" class="img-fluid w-100 img-full-height" alt="Nessuna immagine disponibile">
+              <img src="{{ url_for('static', filename='no_immagine_raccolta.jpg') }}" class="img-fluid img-fit-contain img-full-height" alt="Nessuna immagine disponibile">
               {% endif %}
             </div>           
             <div class="col-md-8"> <!-- Assegna 8 colonne al contenuto, affinché occupino lo spazio a destra dell'immagine -->
